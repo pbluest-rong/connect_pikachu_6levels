@@ -1,0 +1,68 @@
+//21130482_LeBaPhung_0336677141_DH21DTC
+$bg-color: black;
+$text-color: white;
+$bt-color: greenyellow;
+$timeline-color: darkblue;
+
+* {
+  font-family: "Press Start 2P", system-ui;
+}
+
+body {
+  background-color: $bg-color;
+}
+
+.container {
+  display: grid;
+  justify-content: center;
+  place-items: center;
+  margin-top: 10px;
+}
+
+.side-bar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  margin-top: 30px;
+  align-items: center;
+}
+
+.title, p {
+  font-size: 30px;
+  display: flex;
+  align-items: center;
+  color: $text-color;
+
+  .featured-icon {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+#board {
+  border-radius: 20px;
+}
+
+.play-btn {
+  background-color: $bt-color;
+  font-size: 16px;
+  width: 400px;
+  padding: 15px 30px;
+  cursor: pointer;
+}
+
+.other-btn {
+  button {
+    display: block;
+    width: 200px;
+    margin-bottom: 10px;
+  }
+}
+
+#timeline {
+  width: 100%;
+  height: 20px;
+  background-color: $timeline-color;
+  border-radius: 10px;
+  transition: width 60s ease-in-out;
+}
