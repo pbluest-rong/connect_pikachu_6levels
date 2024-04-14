@@ -70,6 +70,7 @@ class Board {
             this.positions.set(xAxis + "-" + yAxis, pokemonId);
             this.drawImage(xAxis, yAxis, pokemonId)
         } else {
+            this.positions.set(xAxis + "-" + yAxis, null);
             this.ctx.fillStyle = "gray";
             this.ctx.fillRect(
                 xAxis * BLOCK_SIZE,
@@ -124,11 +125,38 @@ class Board {
         this.ctx.strokeStyle = "red"; // Màu của đường nối (có thể thay đổi)
         this.ctx.lineWidth = 2; // Độ dày của đường nối (có thể thay đổi)
         this.ctx.stroke(); // Hiển thị đường nối
+    }
 
-        // Sau 1 giây, xóa đường nối
+    drawLines(point) {
+        let arr1 = []
+        let arr2 = []
+        let arr3 = []
+        let endPoint = null;
+        let p = point
+        while (p !== null) {
+            if (p.zigzag === 2) {
+                arr1.push(p)
+            } else if (p.zigzag === 1) {
+                arr2.push(p)
+            } else if (p.zigzag === 0) {
+                arr3.push(p)
+            }
+            p = p.parent_Point;
+        }
+        if (arr1.length > 0) {
+            this.drawLine(arr1[0].x, arr1[0].y, arr2[0].x, arr2[0].y)
+            this.drawLine(arr2[0].x, arr2[0].y, arr3[0].x, arr3[0].y)
+            this.drawLine(arr3[0].x, arr3[0].y, arr3[arr3.length - 1].x, arr3[arr3.length - 1].y)
+        } else if (arr2.length > 0) {
+            this.drawLine(arr2[0].x, arr2[0].y, arr3[0].x, arr3[0].y)
+            this.drawLine(arr3[0].x, arr3[0].y, arr3[arr3.length - 1].x, arr3[arr3.length - 1].y)
+        } else if (arr3.length > 0) {
+            this.drawLine(arr3[0].x, arr3[0].y, arr3[arr3.length - 1].x, arr3[arr3.length - 1].y)
+        }
+        // Sau 1 giây, xóa đường nối + xóa ô
         setTimeout(() => {
-            this.drawEmpty(xAxis_1, yAxis_1);
-            this.drawEmpty(xAxis_2, yAxis_2);
+            this.drawEmpty(point.x, point.y);
+            this.drawEmpty(arr3[arr3.length - 1].x, arr3[arr3.length - 1].y);
         }, 500);
     }
 
@@ -145,19 +173,16 @@ class Board {
 
     removePokemon(first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col) {
         //     delete id in  pokemon positions
-        positions.delete(first_Pos_Row + "-" + first_Pos_Col)
-        positions.delete(last_Pos_Row + "-" + last_Pos_Col)
+        positions.set(first_Pos_Row + "-" + first_Pos_Col, null)
+        positions.set(last_Pos_Row + "-" + last_Pos_Col, null)
         //     line
-        this.drawLine(first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col);
+        // this.drawLine(first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col);
     }
 
     // choiceId function: xử lý khi 1 ô được chọn (click)
     choiceId(xAxis, yAxis) {
         if (isGameOver !== true) {
             if (positions.get(xAxis + "-" + yAxis) != null) {
-                let dfs = checkPathDFS(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col)
-                console.log("test: "+dfs.toString())
-
                 if (this.first_Pos_Row == null && this.first_Pos_Col == null) {
                     this.first_Pos_Row = xAxis;
                     this.first_Pos_Col = yAxis;
@@ -165,50 +190,18 @@ class Board {
                 } else {
                     this.last_Pos_Row = xAxis;
                     this.last_Pos_Col = yAxis;
-                    // same row, != col
                     if ((this.first_Pos_Row !== xAxis || this.first_Pos_Col !== yAxis) && positions.get(this.first_Pos_Row + "-" + this.first_Pos_Col) ===
                         positions.get(this.last_Pos_Row + "-" + this.last_Pos_Col)) {
-                        if (this.first_Pos_Row === this.last_Pos_Row) {
-                            // lien nhau
-                            if (Math.abs(this.first_Pos_Col - this.last_Pos_Col) === 1) {
-                                this.removePokemon(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col);
-                            }
-                            // xa nhau
-                            else {
-                                let check = true;
-                                for (let col = this.first_Pos_Col + 1; col < this.last_Pos_Col; col++) {
-                                    if (positions.get(this.first_Pos_Row + "-" + col) !== null) {
-                                        check = false;
-                                        break;
-                                    }
-                                }
-                                if (check) {
-                                    this.removePokemon(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col);
-                                }
-                            }
-                        } else if (this.first_Pos_Col === this.last_Pos_Col) {
-                            // lien nhau
-                            if (Math.abs(this.first_Pos_Row - this.last_Pos_Row) === 1) {
-                                this.removePokemon(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col);
-                            }
-                            // xa nhau
-                            else {
-                                let check = true;
-                                for (let row = this.first_Pos_Row + 1; row < this.last_Pos_Row; row++) {
-                                    if (positions.get(row + "-" + this.first_Pos_Row) !== null) {
-                                        check = false;
-                                        break;
-                                    }
-                                }
-                                if (check) {
-                                    this.removePokemon(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col);
-                                }
-                            }
+                        let dfs = checkPathBFS(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col)
+                        console.log("check dfs: ", dfs === null ? "no path" : dfs)
+                        if (dfs != null) {
+                            this.removePokemon(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col);
+                            this.drawLines(dfs)
                         }
                     }
-
                     this.drawBorder(this.first_Pos_Row, this.first_Pos_Col, 'green', 3)
                     this.drawBorder(this.last_Pos_Row, this.last_Pos_Col, 'green', 3)
+
                     this.first_Pos_Row = null;
                     this.first_Pos_Col = null;
                     this.last_Pos_Row = null;
@@ -262,54 +255,116 @@ class Point {
         this.zigzag = zigzag;
     }
 
-    toString(){
-        let res = "["+ this.x + ", "+this.y+"]";
-        let checkRoot = this;
-        while(checkRoot !== null){
-            res += " <- ["+ checkRoot.x + ", "+checkRoot.y+"]";
-            checkRoot = checkRoot.parent_Point;
+    toString() {
+        return "[" + this.x + ", " + this.y + ", " + this.zigzag + "]";
+    }
+}
+
+function getChild(currentPoint, x_end, y_end) {
+    let list = []
+    let childPoint;
+    if (currentPoint.zigzag < 3) {
+        let p1 = new Point(currentPoint.x - 1, currentPoint.y + 0, 0);
+        let p2 = new Point(currentPoint.x + 1, currentPoint.y + 0, 0);
+        let p3 = new Point(currentPoint.x + 0, currentPoint.y - 1, 0);
+        let p4 = new Point(currentPoint.x + 0, currentPoint.y + 1, 0);
+
+        if (positions.get(p1.x + "-" + p1.y) === null || p1.x === x_end && p1.y === y_end) {
+            p1.parent_Point = currentPoint
+            setZigzag(p1)
+            if (p1.zigzag <= 2) {
+                list.push(p1)
+            }
+        }
+        if (positions.get(p2.x + "-" + p2.y) === null || p2.x === x_end && p2.y === y_end) {
+            p2.parent_Point = currentPoint
+            setZigzag(p2)
+            if (p2.zigzag <= 2) {
+                list.push(p2)
+            }
+        }
+
+        if (positions.get(p3.x + "-" + p3.y) === null || p3.x === x_end && p3.y === y_end) {
+            p3.parent_Point = currentPoint
+            setZigzag(p3)
+            if (p3.zigzag <= 2) {
+                list.push(p3)
+            }
+        }
+        if (positions.get(p4.x + "-" + p4.y) === null || p4.x === x_end && p4.y === y_end) {
+            p4.parent_Point = currentPoint
+            setZigzag(p4)
+            if (p4.zigzag <= 2) {
+                list.push(p4)
+            }
+        }
+    }
+    return list;
+}
+
+function setZigzag(point) {
+    if (point.parent_Point === null) {
+        point.zigzag = 0;
+    } else if (point.parent_Point.parent_Point === null) {
+        point.zigzag = 0;
+    } else {
+        let x1 = point.x;
+        let y1 = point.y;
+        let x2 = point.parent_Point.x;
+        let y2 = point.parent_Point.y;
+        let x3 = point.parent_Point.parent_Point.x;
+        let y3 = point.parent_Point.parent_Point.y;
+        if (x1 === x2 && x2 === x3 || y1 === y2 && y2 === y3) {
+            point.zigzag = point.parent_Point.zigzag;
+        } else {
+            point.zigzag = point.parent_Point.zigzag + 1;
         }
     }
 }
 
-function checkPathDFS(x_start, y_start, x_end, y_end) {
+function checkPathBFS(x_start, y_start, x_end, y_end) {
+
+    if (getChild(new Point(x_end, y_end, 0), x_end, y_end) === null) {
+        return null;
+    }
+
     let queue = []//chua dinh dang xet
     let currentPoint = new Point(x_start, y_start, 0);
     queue.push(currentPoint)
+    let minDistance = Number.MAX_SAFE_INTEGER;
+    let visited = []
     while (queue.length > 0) {
-        currentPoint = queue[queue.length - 1]
-        // remove queue
-        queue.shift();
+        console.log("size: ", queue.length)
+        currentPoint = queue.shift()
+        visited.push(currentPoint)
+        if (currentPoint.parent_Point !== null) {
+            console.log("currentPoint: ", currentPoint.x, currentPoint.y, currentPoint.zigzag, "parent: ", currentPoint.parent_Point.x, currentPoint.parent_Point.y, currentPoint.parent_Point.zigzag)
+        } else {
+            console.log("currentPoint: ", currentPoint.x, currentPoint.y, currentPoint.zigzag, "null")
+        }
         if (currentPoint.x === x_end && currentPoint.y === y_end) {
             return currentPoint;
-        }
-        //     add queue: uu tien huong ve cung hang cung cot truoc
-        if (currentPoint.zigzag < 3) {
-            let childPoints = []
-            if (positions.get((currentPoint.x - 1) + "-" + currentPoint.y) != null) {
-                childPoints.push(new Point(currentPoint.x - 1, currentPoint.y))
-            }
-            if (positions.get((currentPoint.x + 1) + "-" + currentPoint.y) != null) {
-                childPoints.push(new Point(currentPoint.x + 1, currentPoint.y))
-            }
-
-            if (positions.get(currentPoint.x + "-" + (currentPoint.y - 1)) != null) {
-                childPoints.push(new Point(currentPoint.x, currentPoint.y - 1))
-            }
-            if (positions.get(currentPoint.x + "-" + (currentPoint.y + 1)) != null) {
-                childPoints.push(new Point(currentPoint.x, currentPoint.y + 1))
-            }
-            // parent 1 - parent 2 - child -> khác x hoac khac y => zigzag + 1
+        } else {
+            let childPoints = getChild(currentPoint, x_end, y_end)
             for (let i = 0; i < childPoints.length; i++) {
-                if (childPoints[i].x !== currentPoint.parent_Point.x && childPoints[i].y !== currentPoint.parent_Point.y) {
-                    if (
-                        !(
-                            (childPoints[i].x === currentPoint.x && currentPoint.x === currentPoint.parent_Point.x)
-                            || (childPoints[i].y === currentPoint.y && currentPoint.y === currentPoint.parent_Point.y)
-                        )
-                    ) {
-                        childPoints[i].zigzag++;
-                        childPoints[i].parent_Point = currentPoint;
+                let e = childPoints[i];
+                if (!queue.some(child => child.x === e.x && child.y === e.y && child.zigzag !== e.zigzag
+                        && child.parent_Point.zigzag === e.parent_Point.zigzag)
+                    && !visited.some(child => child.x === e.x && child.y === e.y && child.zigzag === e.zigzag
+                        && child.parent_Point.zigzag === e.parent_Point.zigzag
+                        && child.parent_Point.x === e.parent_Point.x
+                        && child.parent_Point.y === e.parent_Point.y)
+                ) {
+                    if (e.x === x_end && e.y === y_end) {
+                        queue.unshift(e)
+                    } else {
+                        queue.push(e);
+                        // ưu tiên kc gần hơn
+                        queue.sort((a, b) => (
+                            Math.sqrt((Math.pow(a.x - x_end, 2) + Math.pow(a.y - y_end, 2)))
+                            -
+                            Math.sqrt((Math.pow(b.x - x_end, 2) + Math.pow(b.y - y_end, 2)))
+                        ));
                     }
                 }
             }
@@ -377,7 +432,7 @@ board.drawImage(16, 7, randomPokemonId())
 board.drawImage(17, 7, randomPokemonId())
 
 // coundown function: đếm ngược thơi gian
-let number = 60;
+let number = 10 * 60;
 const timeline = document.getElementById("timeline");
 const init_timeline_width = timeline.offsetWidth;
 
@@ -387,13 +442,13 @@ function coundown() {
         document.getElementById("timer").innerHTML = parseInt(number / 60) + ":" + (number % 60);
         const newWidth = (number / (60)) * init_timeline_width;
         document.getElementById("timeline").style.width = 90 + '%';
-        console.log(init_timeline_width, timeline.offsetWidth, newWidth)
+        // console.log(init_timeline_width, timeline.offsetWidth, newWidth)
 
         setTimeout("coundown()", 1000);
     } else {
         document.getElementById("timer").innerHTML = "Game Over";
         playBtn.innerHTML = "Re Play"
-        number = 60;
+        number = 10 * 60;
         isGameOver = true;
     }
 }
