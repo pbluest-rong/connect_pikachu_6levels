@@ -1,6 +1,7 @@
 * {
   font-family: "Press Start 2P", system-ui;
   color: white;
+  margin: 0;
 }
 
 body {
@@ -23,20 +24,20 @@ body {
 }
 
 .title {
-  font-size: 20px;
+  font-size: 18px;
   display: flex;
   align-items: center;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 p {
   color: yellow;
-  font-size: 30px;
+  font-size: 25px;
 }
 
 .btn {
   background-color: greenyellow;
-  font-size: 26px;
+  font-size: 25px;
   height: 60px;
   padding: 15px 10px;
   cursor: pointer;
@@ -49,7 +50,7 @@ p {
 }
 .btn-group #play-btn {
   background-color: greenyellow;
-  font-size: 16px;
+  font-size: 15px;
   width: 400px;
   height: 60px;
   padding: 15px 30px;

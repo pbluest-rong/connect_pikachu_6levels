@@ -2,7 +2,7 @@
 /**CONSTANT */
 const COLS = 16 + 2;
 const ROWS = 8 + 2;
-const BLOCK_SIZE = 50;
+const BLOCK_SIZE = 55;
 const TIME = 10 * 60;
 let CHANGE_NUMBER = 5;
 let LEVEL = 1;
@@ -77,7 +77,6 @@ class Board {
         if (xAxis !== 0 && xAxis !== COLS - 1 && yAxis !== 0 && yAxis !== ROWS - 1) {
             this.positions.set(xAxis + "-" + yAxis, pokemonId);
             this.drawImage(xAxis, yAxis, pokemonId)
-            this.drawBorder(xAxis, yAxis, "green", 3);
         } else {
             this.positions.set(xAxis + "-" + yAxis, null);
             this.drawEmpty(xAxis, yAxis)
@@ -96,23 +95,8 @@ class Board {
                 BLOCK_SIZE,
                 BLOCK_SIZE
             );
-            this.drawBorder(xAxis, yAxis, "green", 3);
         };
     }
-
-    // drawBorder function: vẽ viền của 1 ô
-    drawBorder(xAxis, yAxis, color, lineWidth) {
-        // Vẽ border cho 1 ô
-        this.ctx.strokeStyle = color;
-        this.ctx.lineWidth = lineWidth;
-        this.ctx.strokeRect(
-            xAxis * BLOCK_SIZE,
-            yAxis * BLOCK_SIZE,
-            BLOCK_SIZE,
-            BLOCK_SIZE
-        );
-    }
-
     // drawLine function: vẽ đường nối khi 2 ô
     drawLine(xAxis_1, yAxis_1, xAxis_2, yAxis_2) {
         // Tính toán tọa độ điểm bắt đầu và điểm kết thúc của đường nối
@@ -176,22 +160,22 @@ class Board {
 
     // drawEmpty function: tô màu 1 ô
     drawEmpty(xAxis, yAxis) {
-        if (xAxis !== 0 && xAxis !== COLS - 1 && yAxis !== 0 && yAxis !== ROWS - 1) {
-            this.ctx.fillStyle = "green";
-            this.ctx.fillRect(
-                xAxis * BLOCK_SIZE,
-                yAxis * BLOCK_SIZE,
-                BLOCK_SIZE,
-                BLOCK_SIZE
-            );
-        } else {
-            this.ctx.clearRect(
-                xAxis * BLOCK_SIZE,
-                yAxis * BLOCK_SIZE,
-                BLOCK_SIZE,
-                BLOCK_SIZE
-            );
-        }
+        this.ctx.clearRect(
+            xAxis * BLOCK_SIZE,
+            yAxis * BLOCK_SIZE,
+            BLOCK_SIZE,
+            BLOCK_SIZE
+        );
+    }
+    drawChoice(xAxis, yAxis) {
+        this.ctx.globalAlpha = 0.5;
+        this.ctx.fillRect(
+            xAxis * BLOCK_SIZE,
+            yAxis * BLOCK_SIZE,
+            BLOCK_SIZE,
+            BLOCK_SIZE
+        );
+        this.ctx.globalAlpha = 1;
     }
 
     removePokemon(first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col) {
@@ -211,7 +195,7 @@ class Board {
                 if (this.first_Pos_Row == null && this.first_Pos_Col == null) {
                     this.first_Pos_Row = xAxis;
                     this.first_Pos_Col = yAxis;
-                    this.drawBorder(this.first_Pos_Row, this.first_Pos_Col, 'red', 2)
+                    this.drawChoice(this.first_Pos_Row, this.first_Pos_Col)
                 }
                     // Xử lý sự kiện người chơi chọn ô thứ hai:
                 // Gán giá trị cho last_Pos_Row và last_Pos_Col
@@ -235,8 +219,8 @@ class Board {
                         }
                     }
                     // Thiết lập lại giá trị first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col
-                    this.drawBorder(this.first_Pos_Row, this.first_Pos_Col, 'green', 3)
-                    this.drawBorder(this.last_Pos_Row, this.last_Pos_Col, 'green', 3)
+                    this.drawImage(this.first_Pos_Row, this.first_Pos_Col, positions.get(this.first_Pos_Row + "-" + this.first_Pos_Col))
+                    // this.drawImage(this.last_Pos_Row, this.last_Pos_Col, positions.get(this.last_Pos_Row + "-" + this.last_Pos_Col))
 
                     this.first_Pos_Row = null;
                     this.first_Pos_Col = null;
@@ -485,6 +469,7 @@ const changeBtn = document.getElementById('change-btn');
 
 // coundown function: đếm ngược thơi gian
 let number = TIME;
+
 function coundown() {
     number--;
     if (isGameOver === true) {
