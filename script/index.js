@@ -5,6 +5,10 @@ const ROWS = 8 + 2;
 const BLOCK_SIZE = 50;
 const TIME = 10 * 60;
 let CHANGE_NUMBER = 5;
+let LEVEL = 1;
+let countdownTimeout;
+let board;
+
 // image data set source: https://www.kaggle.com/datasets/hlrhegemony/pokemon-image-dataset
 const imgs = [
     "images/pokemon-set/1.jpg",
@@ -43,7 +47,7 @@ for (let i = 0; i < imgs.length; i++) {
 // positions: lưu pokemon tương ứng với 1 ô, e.g: <1-1, 3>
 let positions = new Map();
 let isGameOver = false;
-// Thay vì duyệt qua tất cả các ô để biết người chơi đã thắng. Biến trueChoiceCounter sẽ thêm 2 đơn vị khi người chơi chọn 2 ô có đường nốis
+// Thay vì duyệt qua tất cả các ô để biết người chơi đã thắng. Biến trueChoiceCounter sẽ thêm 2 đơn vị khi người chơi chọn 2 ô có đường nối
 let trueChoiceCounter = 0;
 // canvas
 const canvas = document.getElementById("board");
@@ -73,10 +77,10 @@ class Board {
         if (xAxis !== 0 && xAxis !== COLS - 1 && yAxis !== 0 && yAxis !== ROWS - 1) {
             this.positions.set(xAxis + "-" + yAxis, pokemonId);
             this.drawImage(xAxis, yAxis, pokemonId)
+            this.drawBorder(xAxis, yAxis, "green", 3);
         } else {
             this.positions.set(xAxis + "-" + yAxis, null);
             this.drawEmpty(xAxis, yAxis)
-            // this.drawBorder(xAxis, yAxis, "red", 3);
         }
     }
 
@@ -275,7 +279,7 @@ class Board {
             for (let row = 0; row < ROWS; row++) {
                 for (let col = 0; col < COLS; col++) {
                     if (row !== 0 && row !== ROWS - 1 && col !== 0 && col !== COLS - 1) {
-                        console.log("check: ", idList[index], index)
+                        // console.log("check: ", idList[index], index)
                         let pokemonId = idList[index];
                         this.drawCell(col, row, pokemonId);
                         index++;
@@ -291,8 +295,9 @@ class Board {
     change() {
         if (CHANGE_NUMBER > 0) {
             // Lấy danh sách các khóa từ Map
-            let keys = Array.from(positions.keys());
-            for (let i = 0; i < (ROWS - 2) * (COLS - 2) / 1.1; i++) {
+            let keys = Array.from(positions.keys()).filter(key => positions.get(key) !== null);
+
+            for (let i = 0; i < keys.length; i++) {
                 // Chọn ngẫu nhiên 2 khóa từ danh sách
                 let randomKeys = [];
                 while (randomKeys.length < 2) {
@@ -470,44 +475,67 @@ function randomPokemonId() {
     return parseInt(Math.floor(Math.random() * keysArray.length) + 1);
 }
 
-board = initGame()
-// Xử lý khi click button 'plau-btn' (bắt đầu trò chơi)
+
+// Giao diện ban đầu
+initGame()
 const playBtn = document.getElementById('play-btn');
+const replayBtn = document.getElementById('replay-btn');
 const levelBox = document.getElementById('level-box');
 const changeBtn = document.getElementById('change-btn');
+
 // coundown function: đếm ngược thơi gian
 let number = TIME;
-
 function coundown() {
     number--;
     if (isGameOver === true) {
-        document.getElementById("timer").innerHTML = "congratulations";
-        return;
+        document.getElementById("timer").innerHTML = "Congratulations";
+        return false;
     }
-    if (number !== 0) {
+    if (number > 0) {
         document.getElementById("timer").innerHTML = parseInt(number / 60) + ":" + (number % 60);
-        setTimeout("coundown()", 1000);
+        countdownTimeout = setTimeout("coundown()", 1000);
     } else {
         isGameOver = true;
         document.getElementById("timer").innerHTML = "Game Over";
+        return false;
     }
 }
 
-changeBtn.addEventListener('click', function () {
-    if (isGameOver === false) {
-        board.change();
-    }
-})
+// Xử lý sự kiện các button
 playBtn.addEventListener('click', function () {
+    LEVEL = getChoiceLevel();
+    // hủy time cũ
+    if (countdownTimeout) {
+        clearTimeout(countdownTimeout);
+    }
+
     playBtn.disabled = true;
     playBtn.style.display = "none";
     levelBox.disabled = true;
     levelBox.style.display = "none";
-
-
     document.getElementsByTagName("body")[0].style.backgroundImage = "url('/images/bg2.jpg')";
     board = new Board(ctx);
-    board.drawBoard();
+    console.log(LEVEL)
+    if (LEVEL === 2) {
+        //     tạo map khác level 1
+
+        //     chỉnh sửa thuật toán 1 tí
+
+    } else if (LEVEL === 3) {
+
+    } else if (LEVEL === 4) {
+
+    } else if (LEVEL === 5) {
+
+    } else if (LEVEL === 6) {
+
+    } else if (LEVEL === 7) {
+
+    } else if (LEVEL === 8) {
+
+    } else {
+        board.drawBoard();
+    }
     isGameOver = false;
     coundown();
     canvas.addEventListener("click", function (event) {
@@ -523,9 +551,25 @@ playBtn.addEventListener('click', function () {
     });
 });
 
+changeBtn.addEventListener('click', function () {
+    if (isGameOver === false) {
+        board.change();
+    }
+})
+
+replayBtn.addEventListener('click', function () {
+    // default setting
+    number = 0;
+    number = TIME;
+    CHANGE_NUMBER = 5;
+    isGameOver = false;
+    trueChoiceCounter = 0;
+    board.drawBoard();
+});
+
 // Khởi tạo giao diện chưa bắt đầu chơi
 function initGame() {
-    board = new Board(ctx);
+    let board = new Board(ctx);
 // P
     board.drawImage(1, 7, randomPokemonId())
     board.drawImage(1, 6, randomPokemonId());
@@ -592,9 +636,20 @@ function exit() {
     // Sử dụng window.location để chuyển đến URL mới
     window.location.href = "index.html";
 }
-function showButtonForGame(){
+
+function showButtonForGame() {
     document.getElementById("change-btn").style.display = 'block';
     document.getElementById("chance-counter").style.display = 'block';
     document.getElementById("exit-btn").style.display = 'block';
     document.getElementById("replay-btn").style.display = 'block';
+}
+
+function getChoiceLevel() {
+    let ele = document.getElementsByName('level');
+
+    for (let i = 0; i < ele.length; i++) {
+        if (ele[i].checked)
+            return Number(ele[i].value);
+    }
+    return 1;
 }
