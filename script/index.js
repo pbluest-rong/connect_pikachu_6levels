@@ -1,8 +1,10 @@
 // 21130482_LeBaPhung_0336677141_DH21DTC
 /**CONSTANT */
-const COLS = 20;
-const ROWS = 10;
-const BLOCK_SIZE = 40;
+const COLS = 16 + 2;
+const ROWS = 8 + 2;
+const BLOCK_SIZE = 50;
+const TIME = 10 * 60;
+let CHANGE_NUMBER = 5;
 // image data set source: https://www.kaggle.com/datasets/hlrhegemony/pokemon-image-dataset
 const imgs = [
     "images/pokemon-set/1.jpg",
@@ -41,6 +43,8 @@ for (let i = 0; i < imgs.length; i++) {
 // positions: lưu pokemon tương ứng với 1 ô, e.g: <1-1, 3>
 let positions = new Map();
 let isGameOver = false;
+// Thay vì duyệt qua tất cả các ô để biết người chơi đã thắng. Biến trueChoiceCounter sẽ thêm 2 đơn vị khi người chơi chọn 2 ô có đường nốis
+let trueChoiceCounter = 0;
 // canvas
 const canvas = document.getElementById("board");
 const ctx = canvas.getContext("2d");
@@ -64,20 +68,15 @@ class Board {
         return Array.from({length: ROWS}, () => Array(COLS).fill());
     }
 
-    // drawCell function: dựa vào id của thẻ pokemon sẽ vẽ image lên 1 ô hoặc vẽ viền cho board(vièn giới hạn)
+    // drawCell function: dựa vào id của thẻ pokemon sẽ vẽ image lên 1 ô hoặc vẽ viền cho board(giới hạn)
     drawCell(xAxis, yAxis, pokemonId) {
         if (xAxis !== 0 && xAxis !== COLS - 1 && yAxis !== 0 && yAxis !== ROWS - 1) {
             this.positions.set(xAxis + "-" + yAxis, pokemonId);
             this.drawImage(xAxis, yAxis, pokemonId)
         } else {
             this.positions.set(xAxis + "-" + yAxis, null);
-            this.ctx.fillStyle = "gray";
-            this.ctx.fillRect(
-                xAxis * BLOCK_SIZE,
-                yAxis * BLOCK_SIZE,
-                BLOCK_SIZE,
-                BLOCK_SIZE
-            );
+            this.drawEmpty(xAxis, yAxis)
+            // this.drawBorder(xAxis, yAxis, "red", 3);
         }
     }
 
@@ -110,7 +109,7 @@ class Board {
         );
     }
 
-    // drawLine function: vẽ đường nối khi 2 thẻ được chọn biến mất
+    // drawLine function: vẽ đường nối khi 2 ô
     drawLine(xAxis_1, yAxis_1, xAxis_2, yAxis_2) {
         // Tính toán tọa độ điểm bắt đầu và điểm kết thúc của đường nối
         const startX = xAxis_1 * BLOCK_SIZE + BLOCK_SIZE / 2;
@@ -127,6 +126,10 @@ class Board {
         this.ctx.stroke(); // Hiển thị đường nối
     }
 
+    /*
+     drawLines function: tham số truyền vào là kết quả tìm được đường đi của 2 ô (Point). Dựa vào giá trị parent,
+     sẽ vẽ được đường đi
+     */
     drawLines(point) {
         let arr1 = []
         let arr2 = []
@@ -153,52 +156,81 @@ class Board {
         } else if (arr3.length > 0) {
             this.drawLine(arr3[0].x, arr3[0].y, arr3[arr3.length - 1].x, arr3[arr3.length - 1].y)
         }
-        // Sau 1 giây, xóa đường nối + xóa ô
+        // Sau 0.5 giây, xóa đường nối + xóa ô
         setTimeout(() => {
-            this.drawEmpty(point.x, point.y);
-            this.drawEmpty(arr3[arr3.length - 1].x, arr3[arr3.length - 1].y);
+            for (let i = 0; i < arr1.length; i++) {
+                this.drawEmpty(arr1[i].x, arr1[i].y);
+            }
+            for (let i = 0; i < arr2.length; i++) {
+                this.drawEmpty(arr2[i].x, arr2[i].y);
+            }
+            for (let i = 0; i < arr3.length; i++) {
+                this.drawEmpty(arr3[i].x, arr3[i].y);
+            }
         }, 500);
     }
 
     // drawEmpty function: tô màu 1 ô
     drawEmpty(xAxis, yAxis) {
-        this.ctx.fillStyle = "green";
-        this.ctx.fillRect(
-            xAxis * BLOCK_SIZE,
-            yAxis * BLOCK_SIZE,
-            BLOCK_SIZE,
-            BLOCK_SIZE
-        );
+        if (xAxis !== 0 && xAxis !== COLS - 1 && yAxis !== 0 && yAxis !== ROWS - 1) {
+            this.ctx.fillStyle = "green";
+            this.ctx.fillRect(
+                xAxis * BLOCK_SIZE,
+                yAxis * BLOCK_SIZE,
+                BLOCK_SIZE,
+                BLOCK_SIZE
+            );
+        } else {
+            this.ctx.clearRect(
+                xAxis * BLOCK_SIZE,
+                yAxis * BLOCK_SIZE,
+                BLOCK_SIZE,
+                BLOCK_SIZE
+            );
+        }
     }
 
     removePokemon(first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col) {
         //     delete id in  pokemon positions
         positions.set(first_Pos_Row + "-" + first_Pos_Col, null)
         positions.set(last_Pos_Row + "-" + last_Pos_Col, null)
-        //     line
-        // this.drawLine(first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col);
     }
 
     // choiceId function: xử lý khi 1 ô được chọn (click)
     choiceId(xAxis, yAxis) {
+        // Kiểm tra trạng thái game. Nếu isGameOver là false thì tiếp tục trò chơi
         if (isGameOver !== true) {
+            // Xử lý ô được chọn có giá trị pokemonId là null hay không. Nếu ô được chọn có giá trị không null thì tiếp tục xử lý
             if (positions.get(xAxis + "-" + yAxis) != null) {
+                // Xử lý sự kiện người chơi chọn ô đầu tiên:
+                // gán giá trị cho first_Pos_Row và first_Pos_Col
                 if (this.first_Pos_Row == null && this.first_Pos_Col == null) {
                     this.first_Pos_Row = xAxis;
                     this.first_Pos_Col = yAxis;
                     this.drawBorder(this.first_Pos_Row, this.first_Pos_Col, 'red', 2)
-                } else {
+                }
+                    // Xử lý sự kiện người chơi chọn ô thứ hai:
+                // Gán giá trị cho last_Pos_Row và last_Pos_Col
+                else {
                     this.last_Pos_Row = xAxis;
                     this.last_Pos_Col = yAxis;
+                    // Điều kiện là vị trí 2 ô được chọn khác nhau và pokemonId giống nhau
                     if ((this.first_Pos_Row !== xAxis || this.first_Pos_Col !== yAxis) && positions.get(this.first_Pos_Row + "-" + this.first_Pos_Col) ===
                         positions.get(this.last_Pos_Row + "-" + this.last_Pos_Col)) {
+                        // Sử dụng thuật toán để tìm đường đi
                         let dfs = checkPathBFS(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col)
                         console.log("check dfs: ", dfs === null ? "no path" : dfs)
+                        // Xử lý kết quả đường đi thu được
                         if (dfs != null) {
+                            trueChoiceCounter += 2;
+                            if (trueChoiceCounter === (ROWS - 2) * (COLS - 2)) {
+                                isGameOver = true;
+                            }
                             this.removePokemon(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col);
                             this.drawLines(dfs)
                         }
                     }
+                    // Thiết lập lại giá trị first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col
                     this.drawBorder(this.first_Pos_Row, this.first_Pos_Col, 'green', 3)
                     this.drawBorder(this.last_Pos_Row, this.last_Pos_Col, 'green', 3)
 
@@ -212,40 +244,95 @@ class Board {
         }
     }
 
+    // Khởi tạo bản đồ ngẫu nhiên pokemon
     drawBoard() {
-        const totalCells = COLS * ROWS;
-        const pokemonCount = totalCells / 2; // Số lượng thẻ Pokémon cần xuất hiện trên bản đồ
-        const pokemonIds = this.generateRandomPokemonIds(pokemonCount); // Tạo một mảng chứa các ID ngẫu nhiên của các thẻ Pokémon
-        const pokemonPairs = pokemonIds.concat(pokemonIds); // Mỗi thẻ Pokémon cần có một thẻ khác để kết hợp với nó
-        const shuffledPairs = this.shuffleArray(pokemonPairs); // Trộn ngẫu nhiên các cặp thẻ Pokémon
+        document.getElementById("chance-counter").innerHTML = CHANGE_NUMBER;
+        showButtonForGame();
+        let size = (COLS - 2) * (ROWS - 2)//chan
+        let idList = []
+        const options = [2, 4]
 
-        let index = 0;
-        for (let row = 0; row < ROWS; row++) {
-            for (let col = 0; col < COLS; col++) {
-                const pokemonId = shuffledPairs[index]; // Lấy ID của thẻ Pokémon tại vị trí hiện tại trong mảng đã trộn
-                this.drawCell(col, row, pokemonId); // Vẽ thẻ Pokémon vào ô tương ứng
+        if (size % 2 === 0) {
+            console.log("size: ", size)
+            let id, option;
+            while (idList.length < size) {
+                id = randomPokemonId()
+                option = options[Math.floor(Math.random() * options.length)]
+                for (let i = 0; i < option; i++) {
+                    if (idList.length < size) {
+                        idList.push(id)
+                    }
+                }
+            }
+            console.log("ids: ", idList.length)
+            // trộn mang
+            for (let i = idList.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [idList[i], idList[j]] = [idList[j], idList[i]];
+            }
+            // lưu vị trí vào pokemonMap và vẽ trên canvas
+            let index = 0;
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    if (row !== 0 && row !== ROWS - 1 && col !== 0 && col !== COLS - 1) {
+                        console.log("check: ", idList[index], index)
+                        let pokemonId = idList[index];
+                        this.drawCell(col, row, pokemonId);
+                        index++;
+                    } else {
+                        this.drawCell(col, row, null);
+                    }
+                }
+            }
+            console.log("final: ", index)
+        }
+    }
+
+    change() {
+        if (CHANGE_NUMBER > 0) {
+            // Lấy danh sách các khóa từ Map
+            let keys = Array.from(positions.keys());
+            for (let i = 0; i < (ROWS - 2) * (COLS - 2) / 1.1; i++) {
+                // Chọn ngẫu nhiên 2 khóa từ danh sách
+                let randomKeys = [];
+                while (randomKeys.length < 2) {
+                    let randomKey = keys[Math.floor(Math.random() * keys.length)];
+                    if (!randomKeys.includes(randomKey)) {
+                        randomKeys.push(randomKey);
+                    }
+                }
+                // Lấy giá trị tương ứng với mỗi khóa
+                let firstValue = positions.get(randomKeys[0])
+                let lastValue = positions.get(randomKeys[1])
+                // switch
+                if (firstValue !== null && lastValue !== null) {
+                    positions.set(randomKeys[0], lastValue)
+                    positions.set(randomKeys[1], firstValue)
+                }
+            }
+            // lưu vị trí vào pokemonMap và vẽ trên canvas
+            keys = Array.from(positions.keys());
+
+            let index = 0;
+            while (index < keys.length) {
+                let [x, y] = keys[index].split('-');
+                if (positions.get(keys[index]) !== null) {
+                    this.drawCell(x, y, positions.get(keys[index]))
+                }
                 index++;
             }
+            CHANGE_NUMBER -= 1;
+            document.getElementById("chance-counter").innerHTML = CHANGE_NUMBER;
         }
-    }
-
-    generateRandomPokemonIds(count) {
-        const randomIds = [];
-        for (let i = 0; i < count; i++) {
-            randomIds.push(randomPokemonId()); // Thêm một ID Pokémon ngẫu nhiên vào mảng
-        }
-        return randomIds;
-    }
-
-    shuffleArray(array) {
-        // Thuật toán trộn mảng Fisher-Yates
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
     }
 }
+
+/*
+ Point class: 1 point sẽ tương ứng 1 ô, bao gồm các thuộc tính
+ + x, y: vị trí trên canvas
+ + parent_Point: dùng để lưu Point cha khi tìm đường đi của thuật toán tìm đường đi
+ + zigzag: thể hiện số lần gấp khúc trên đường đi của thuật toán tìm đường đi
+ */
 
 class Point {
     constructor(x, y, zigzag) {
@@ -260,6 +347,7 @@ class Point {
     }
 }
 
+// getChild function: lấy các ô kề của một ô mà các ô đó có giá trị pokemonId là null hoặc là vị trí đích đến (endPoint)
 function getChild(currentPoint, x_end, y_end) {
     let list = []
     let childPoint;
@@ -302,6 +390,7 @@ function getChild(currentPoint, x_end, y_end) {
     return list;
 }
 
+// setZigzag function: tìm zigzag dựa vào parentPoint
 function setZigzag(point) {
     if (point.parent_Point === null) {
         point.zigzag = 0;
@@ -322,6 +411,7 @@ function setZigzag(point) {
     }
 }
 
+// checkPathBFS function: thuật toán tìm đường đi giữa 2 điểm
 function checkPathBFS(x_start, y_start, x_end, y_end) {
 
     if (getChild(new Point(x_end, y_end, 0), x_end, y_end) === null) {
@@ -353,7 +443,8 @@ function checkPathBFS(x_start, y_start, x_end, y_end) {
                     && !visited.some(child => child.x === e.x && child.y === e.y && child.zigzag === e.zigzag
                         && child.parent_Point.zigzag === e.parent_Point.zigzag
                         && child.parent_Point.x === e.parent_Point.x
-                        && child.parent_Point.y === e.parent_Point.y)
+                        && child.parent_Point.y
+                        === e.parent_Point.y)
                 ) {
                     if (e.x === x_end && e.y === y_end) {
                         queue.unshift(e)
@@ -375,87 +466,46 @@ function checkPathBFS(x_start, y_start, x_end, y_end) {
 
 // randomPokemonId function: trả về ngẫu nhiên id của pokemon
 function randomPokemonId() {
-    return parseInt(Math.random() * imgs.length) + 1;
+    let keysArray = Array.from(pokemonMap.keys());
+    return parseInt(Math.floor(Math.random() * keysArray.length) + 1);
 }
 
-// Khởi tạo giao diện chưa bắt đầu chơi
-board = new Board(ctx);
-// P
-board.drawImage(1, 7, randomPokemonId())
-board.drawImage(1, 6, randomPokemonId());
-board.drawImage(1, 5, randomPokemonId())
-board.drawImage(1, 4, randomPokemonId());
-board.drawImage(1, 3, randomPokemonId())
-board.drawImage(2, 3, randomPokemonId())
-board.drawImage(3, 3, randomPokemonId())
-board.drawImage(3, 4, randomPokemonId())
-board.drawImage(3, 5, randomPokemonId())
-board.drawImage(3, 3, randomPokemonId())
-board.drawImage(2, 5, randomPokemonId())
-// b
-
-board.drawImage(5, 3, randomPokemonId())
-board.drawImage(5, 4, randomPokemonId())
-board.drawImage(5, 5, randomPokemonId())
-board.drawImage(5, 6, randomPokemonId())
-board.drawImage(5, 7, randomPokemonId())
-board.drawImage(6, 5, randomPokemonId())
-board.drawImage(7, 5, randomPokemonId())
-board.drawImage(7, 6, randomPokemonId())
-board.drawImage(7, 7, randomPokemonId())
-board.drawImage(6, 7, randomPokemonId())
-// l
-board.drawImage(9, 3, randomPokemonId())
-board.drawImage(9, 4, randomPokemonId())
-board.drawImage(9, 5, randomPokemonId())
-board.drawImage(9, 6, randomPokemonId())
-board.drawImage(9, 7, randomPokemonId())
-// u
-board.drawImage(11, 5, randomPokemonId())
-board.drawImage(11, 6, randomPokemonId())
-board.drawImage(11, 7, randomPokemonId())
-board.drawImage(12, 7, randomPokemonId())
-board.drawImage(13, 7, randomPokemonId())
-board.drawImage(13, 6, randomPokemonId())
-board.drawImage(13, 5, randomPokemonId())
-// e
-board.drawImage(16, 3, randomPokemonId())
-board.drawImage(17, 3, randomPokemonId())
-board.drawImage(15, 3, randomPokemonId())
-board.drawImage(15, 4, randomPokemonId())
-board.drawImage(15, 5, randomPokemonId())
-board.drawImage(16, 5, randomPokemonId())
-board.drawImage(17, 5, randomPokemonId())
-board.drawImage(15, 6, randomPokemonId())
-board.drawImage(15, 7, randomPokemonId())
-board.drawImage(16, 7, randomPokemonId())
-board.drawImage(17, 7, randomPokemonId())
-
+board = initGame()
+// Xử lý khi click button 'plau-btn' (bắt đầu trò chơi)
+const playBtn = document.getElementById('play-btn');
+const levelBox = document.getElementById('level-box');
+const changeBtn = document.getElementById('change-btn');
 // coundown function: đếm ngược thơi gian
-let number = 10 * 60;
-const timeline = document.getElementById("timeline");
-const init_timeline_width = timeline.offsetWidth;
+let number = TIME;
 
 function coundown() {
     number--;
+    if (isGameOver === true) {
+        document.getElementById("timer").innerHTML = "congratulations";
+        return;
+    }
     if (number !== 0) {
         document.getElementById("timer").innerHTML = parseInt(number / 60) + ":" + (number % 60);
-        const newWidth = (number / (60)) * init_timeline_width;
-        document.getElementById("timeline").style.width = 90 + '%';
-        // console.log(init_timeline_width, timeline.offsetWidth, newWidth)
-
         setTimeout("coundown()", 1000);
     } else {
-        document.getElementById("timer").innerHTML = "Game Over";
-        playBtn.innerHTML = "Re Play"
-        number = 10 * 60;
         isGameOver = true;
+        document.getElementById("timer").innerHTML = "Game Over";
     }
 }
 
-// Xử lý khi click button 'plau-btn' (bắt đầu trò chơi)
-const playBtn = document.getElementById('play-btn');
+changeBtn.addEventListener('click', function () {
+    if (isGameOver === false) {
+        board.change();
+    }
+})
 playBtn.addEventListener('click', function () {
+    playBtn.disabled = true;
+    playBtn.style.display = "none";
+    levelBox.disabled = true;
+    levelBox.style.display = "none";
+
+
+    document.getElementsByTagName("body")[0].style.backgroundImage = "url('/images/bg2.jpg')";
     board = new Board(ctx);
     board.drawBoard();
     isGameOver = false;
@@ -472,3 +522,79 @@ playBtn.addEventListener('click', function () {
         board.choiceId(cellX, cellY);
     });
 });
+
+// Khởi tạo giao diện chưa bắt đầu chơi
+function initGame() {
+    board = new Board(ctx);
+// P
+    board.drawImage(1, 7, randomPokemonId())
+    board.drawImage(1, 6, randomPokemonId());
+    board.drawImage(1, 5, randomPokemonId())
+    board.drawImage(1, 4, randomPokemonId());
+    board.drawImage(1, 3, randomPokemonId())
+    board.drawImage(2, 3, randomPokemonId())
+    board.drawImage(3, 3, randomPokemonId())
+    board.drawImage(3, 4, randomPokemonId())
+    board.drawImage(3, 5, randomPokemonId())
+    board.drawImage(3, 3, randomPokemonId())
+    board.drawImage(2, 5, randomPokemonId())
+// b
+
+    board.drawImage(5, 3, randomPokemonId())
+    board.drawImage(5, 4, randomPokemonId())
+    board.drawImage(5, 5, randomPokemonId())
+    board.drawImage(5, 6, randomPokemonId())
+    board.drawImage(5, 7, randomPokemonId())
+    board.drawImage(6, 5, randomPokemonId())
+    board.drawImage(7, 5, randomPokemonId())
+    board.drawImage(7, 6, randomPokemonId())
+    board.drawImage(7, 7, randomPokemonId())
+    board.drawImage(6, 7, randomPokemonId())
+// l
+    board.drawImage(9, 3, randomPokemonId())
+    board.drawImage(9, 4, randomPokemonId())
+    board.drawImage(9, 5, randomPokemonId())
+    board.drawImage(9, 6, randomPokemonId())
+    board.drawImage(9, 7, randomPokemonId())
+// u
+    board.drawImage(11, 5, randomPokemonId())
+    board.drawImage(11, 6, randomPokemonId())
+    board.drawImage(11, 7, randomPokemonId())
+    board.drawImage(12, 7, randomPokemonId())
+    board.drawImage(13, 7, randomPokemonId())
+    board.drawImage(13, 6, randomPokemonId())
+    board.drawImage(13, 5, randomPokemonId())
+// e
+    board.drawImage(16, 3, randomPokemonId())
+    board.drawImage(17, 3, randomPokemonId())
+    board.drawImage(15, 3, randomPokemonId())
+    board.drawImage(15, 4, randomPokemonId())
+    board.drawImage(15, 5, randomPokemonId())
+    board.drawImage(16, 5, randomPokemonId())
+    board.drawImage(17, 5, randomPokemonId())
+    board.drawImage(15, 6, randomPokemonId())
+    board.drawImage(15, 7, randomPokemonId())
+    board.drawImage(16, 7, randomPokemonId())
+    board.drawImage(17, 7, randomPokemonId())
+    return board
+}
+
+//showGuide
+function showGuide() {
+    document.getElementById("guide-box").style.display = 'block'
+}
+
+function hideGuide() {
+    document.getElementById("guide-box").style.display = 'none'
+}
+
+function exit() {
+    // Sử dụng window.location để chuyển đến URL mới
+    window.location.href = "index.html";
+}
+function showButtonForGame(){
+    document.getElementById("change-btn").style.display = 'block';
+    document.getElementById("chance-counter").style.display = 'block';
+    document.getElementById("exit-btn").style.display = 'block';
+    document.getElementById("replay-btn").style.display = 'block';
+}

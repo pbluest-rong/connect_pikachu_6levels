@@ -14,25 +14,69 @@
             href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@300;500&display=swap"
             rel="stylesheet"
     />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+          integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
 </head>
 <body>
 <div class="container">
-    <div id="timeline"></div>
-    <canvas id="board"></canvas>
-    <div class="other-btn">
-        <button>Hướng dẫn</button>
-        <button>Video demo</button>
+    <canvas id="board" style="margin-top: 10px; margin-left: 10px; margin-right: 10px;"></canvas>
+    <div style="position: absolute; right: 0; top: 0">
+        <button class="btn" id="change-btn" style="display: none"><i class="fa-solid fa-rotate"></i></button>
+        <div id="chance-counter" style="position: absolute; top: 5px; left: 15px; color: red; display: none"></div>
     </div>
     <div class="side-bar">
-        <div class="title">
-            <img src="images/pikachu.webp" class="featured-icon"/>
-            Connect Pikachu Game
-            <img src="images/pokemon.webp" class="featured-icon"/>
-        </div>
         <p id="timer"></p>
+        <div class="title">
+            Connect Pikachu Game
+        </div>
     </div>
-
-    <button class="play-btn" id="play-btn">Play</button>
+    <div class="level-box" id="level-box">
+        <div class="level">
+            <input type="radio" id="level_1" name="level" checked/>
+            <label for="level_1">1</label>
+        </div>
+        <div class="level">
+            <input type="radio" id="level_2" name="level"/>
+            <label for="level_2">2</label>
+        </div>
+        <div class="level">
+            <input type="radio" id="level_3" name="level"/>
+            <label for="level_3">3</label>
+        </div>
+        <div class="level">
+            <input type="radio" id="level_4" name="level"/>
+            <label for="level_4">4</label>
+        </div>
+        <div class="level">
+            <input type="radio" id="level_5" name="level"/>
+            <label for="level_5">5</label>
+        </div>
+        <div class="level">
+            <input type="radio" id="level_6" name="level"/>
+            <label for="level_6">6</label>
+        </div>
+        <div class="level">
+            <input type="radio" id="level_7" name="level"/>
+            <label for="level_7">7</label>
+        </div>
+        <div class="level">
+            <input type="radio" id="level_8" name="level"/>
+            <label for="level_8">8</label>
+        </div>
+    </div>
+    <div class="btn-group">
+        <button class="btn" id="play-btn">Play</button>
+        <button class="btn" id="exit-btn" style="display:none;" title="Exit" onclick="exit()"><i class="fa-solid fa-backward"></i></button>
+        <button class="btn" id="guide-btn" title="Guide" onclick="showGuide()"><i class="fa-solid fa-book"></i></button>
+        <button class="btn" id="replay-btn" style="display:none;" title="Replay"><i class="fa-solid fa-rotate-right"></i></button>
+    </div>
+    <div id="guide-box">
+        <div>Hướng dẫn chơi Connect Pokemon Game</div>
+        <div style="text-align: center">
+            <button class="btn" id="ok-btn" onclick="hideGuide()">OK</button>
+        </div>
+    </div>
 </div>
 <script src="/script/index.js"></script>
 <!-- error two hours :) -->
