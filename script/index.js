@@ -113,7 +113,11 @@ class Board {
     drawCell(xAxis, yAxis, pokemonId) {
         if (xAxis !== 0 && xAxis !== COLS - 1 && yAxis !== 0 && yAxis !== ROWS - 1) {
             this.positions.set(xAxis + "-" + yAxis, pokemonId);
-            this.drawImage(xAxis, yAxis, pokemonId)
+            if (pokemonId === null) {
+                this.drawEmpty(xAxis, yAxis)
+            } else {
+                this.drawImage(xAxis, yAxis, pokemonId)
+            }
         } else {
             this.positions.set(xAxis + "-" + yAxis, null);
             this.drawEmpty(xAxis, yAxis)
@@ -299,6 +303,11 @@ class Board {
                             }
                             this.removePokemon(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col);
                             this.drawLines(dfs)
+                            //     level 3
+                            if (LEVEL === 3) {
+                                this.handleLevel3(this.first_Pos_Row, this.first_Pos_Col, 600);
+                                this.handleLevel3(this.last_Pos_Row, this.last_Pos_Col, 700);
+                            }
                         }
                     }
                     // Thiết lập lại giá trị first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col
@@ -313,6 +322,24 @@ class Board {
                 console.log(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col)
             }
         }
+    }
+
+    handleLevel3(x, y, time) {
+        setTimeout(() => {
+            if (this.positions.get(x + '-' + y)  === null) {
+                for (let i = y - 1; i > 0; i--) {
+                    let id = this.positions.get(x + '-' + i);
+                    if (id === undefined) {
+                        break;
+                    } else if (id !== null && this.positions.get(x + '-' + (i + 1)) === null) {
+                        this.positions.set(x + '-' + (i + 1), id);
+                        this.positions.set(x + '-' + i, null);
+                        this.drawCell(x, (i + 1), id)
+                        this.drawCell(x, i, null)
+                    }
+                }
+            }
+        }, time)
     }
 
     /*
@@ -419,6 +446,7 @@ class Board {
             console.log("final: ", index)
         }
     }
+
     /*
     change function: xáo trộn bản đồ pokemon hiện tại
      */
@@ -621,6 +649,7 @@ const changeBtn = document.getElementById('change-btn');
 
 // coundown function: đếm ngược thời gian
 let number = TIME;
+
 function coundown() {
     number--;
     if (isGameOver === true) {
@@ -655,7 +684,7 @@ playBtn.addEventListener('click', function () {
     if (LEVEL === 2) {
         board.drawBoardLevel2();
     } else if (LEVEL === 3) {
-
+        board.drawBoardLevel2();
     } else if (LEVEL === 4) {
 
     } else if (LEVEL === 5) {
@@ -700,7 +729,7 @@ replayBtn.addEventListener('click', function () {
     if (LEVEL === 2) {
         board.drawBoardLevel2()
     } else if (LEVEL === 3) {
-
+        board.drawBoardLevel2()
     } else {
         board.drawBoardLevel1()
     }
