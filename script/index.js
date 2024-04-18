@@ -6,6 +6,7 @@ const COLS = 16 + 2;
 const ROWS = 8 + 2;
 const BLOCK_SIZE = 55;
 const TIME = 10 * 60;
+const SECOND_COUNTER_ADD_POKEMON = 60;
 let CHANGE_NUMBER = 5;
 let LEVEL = 1;
 let board;
@@ -338,10 +339,7 @@ class Board {
                             }
                             this.removePokemon(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col);
                             this.drawLines(dfs)
-                            //     level 3
-                            if (LEVEL >= 3) {
-                                this.handleLevel_3(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col);
-                            }
+                            // level 4: phải xử lý trước level 3, vì gặp th ô trên ball bị xóa -> chưa kịp đóng băng thì nó nhảy xuống trước
                             if (LEVEL >= 4) {
                                 if (checkBallPoint(this.first_Pos_Row, this.first_Pos_Col) !== null && checkBallPoint(this.last_Pos_Row, this.last_Pos_Col) !== null) {
                                     this.removeRandomPokemon(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col);
@@ -367,6 +365,10 @@ class Board {
                                     console.log("BALL TWO")
                                 }
 
+                            }
+                            //     level 3:
+                            if (LEVEL >= 3) {
+                                this.handleLevel_3(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col);
                             }
                         }
                     }
@@ -442,49 +444,103 @@ class Board {
     }
 
     removeRandomPokemon(first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col) {
-            //    random pokemonId trong map
-            let number = Math.floor(Math.random() * 6) + 1;
-            let x = Math.floor(COLS / number)
-            let y = Math.floor(ROWS / number)
-            let pokemonId = positions.get(x + '-' + y)
+        //    random pokemonId trong map
+        let number = Math.floor(Math.random() * 6) + 1;
+        let x = Math.floor(COLS / number)
+        let y = Math.floor(ROWS / number)
+        let pokemonId = positions.get(x + '-' + y)
 
-            // 2 ô xóa phải cùng id, không là ball, không là wall, không là first, last
-            while (pokemonId === null || pokemonId === undefined
-            || checkBallPoint(x, y) !== null
-            || (x === first_Pos_Row && y === first_Pos_Col)
-            || (x === last_Pos_Row && y === last_Pos_Col)) {
+        // 2 ô xóa phải cùng id, không là ball, không là wall, không là first, last
+        while (pokemonId === null || pokemonId === undefined
+        || checkBallPoint(x, y) !== null
+        || (x === first_Pos_Row && y === first_Pos_Col)
+        || (x === last_Pos_Row && y === last_Pos_Col)) {
+            if (checkBallPoint(x, y) !== null) {
+                number = Math.floor(Math.random() * 6) + 1;
+                x = Math.floor(COLS / number)
+                y = Math.floor(ROWS / number)
+                pokemonId = positions.get(x + '-' + y)
+            }
+            if ((x === first_Pos_Row && y === first_Pos_Col)
+                || (x === last_Pos_Row && y === last_Pos_Col)) {
+                number = Math.floor(Math.random() * 6) + 1;
+                x = Math.floor(COLS / number)
+                y = Math.floor(ROWS / number)
+                pokemonId = positions.get(x + '-' + y)
+            }
+            if (pokemonId === null || pokemonId === undefined) {
                 pokemonId = randomPokemonId();
             }
+        }
 
-            // luu cac pos cung id
-            let XSameIdPositions = []
-            let YSameIdPositions = []
-            for (let row = 1; row < ROWS - 1; row++) {
-                for (let col = 1; col < COLS - 1; col++) {
-                    if (positions.get(col + '-' + row) === pokemonId) {
-                        XSameIdPositions.push(col);
-                        YSameIdPositions.push(row);
-                    }
+        console.log("ball? ", checkBallPoint(x, y))
+
+        // luu cac pos cung id
+        let XSameIdPositions = []
+        let YSameIdPositions = []
+        for (let row = 1; row < ROWS - 1; row++) {
+            for (let col = 1; col < COLS - 1; col++) {
+                if (positions.get(col + '-' + row) === pokemonId) {
+                    XSameIdPositions.push(col);
+                    YSameIdPositions.push(row);
                 }
             }
-            // set null + ve lai:
-            let i = 0;
-            console.log("arr same remove Id Size", XSameIdPositions.length)
-            console.log("removed Id Two Pokemon 1: ", pokemonId, XSameIdPositions[i], YSameIdPositions[i])
-            console.log("removed Id Two Pokemon 2: ", pokemonId, XSameIdPositions[XSameIdPositions.length - 1], YSameIdPositions[XSameIdPositions.length - 1])
-            // hiệu ứng
+        }
+        // set null + ve lai:
+        let i = 0;
+        console.log("arr same remove Id Size", XSameIdPositions.length)
+        console.log("removed Id Two Pokemon 1: ", pokemonId, XSameIdPositions[i], YSameIdPositions[i])
+        console.log("removed Id Two Pokemon 2: ", pokemonId, XSameIdPositions[XSameIdPositions.length - 1], YSameIdPositions[XSameIdPositions.length - 1])
+        // hiệu ứng
 
-                this.drawChoice(XSameIdPositions[i], YSameIdPositions[i])
-                this.drawChoice(XSameIdPositions[XSameIdPositions.length - 1], YSameIdPositions[XSameIdPositions.length - 1])
-            // null + vẽ lại
-            setTimeout(() => {
-                this.positions.set(XSameIdPositions[i] + '-' + YSameIdPositions[i], null);
-                this.positions.set(XSameIdPositions[XSameIdPositions.length - 1] + '-' + YSameIdPositions[XSameIdPositions.length - 1], null);
-                // có thể drawEmpty, drawWall, fellToGround
-                this.drawWall(XSameIdPositions[i], YSameIdPositions[i])
-                // có thể drawEmpty, drawWall, fellToGround
-                this.drawWall(XSameIdPositions[XSameIdPositions.length - 1], YSameIdPositions[XSameIdPositions.length - 1])
-            }, 600)
+        this.drawChoice(XSameIdPositions[i], YSameIdPositions[i])
+        this.drawChoice(XSameIdPositions[XSameIdPositions.length - 1], YSameIdPositions[XSameIdPositions.length - 1])
+        // null + vẽ lại
+        setTimeout(() => {
+            this.positions.set(XSameIdPositions[i] + '-' + YSameIdPositions[i], null);
+            this.positions.set(XSameIdPositions[XSameIdPositions.length - 1] + '-' + YSameIdPositions[XSameIdPositions.length - 1], null);
+            // có thể drawEmpty, drawWall, fellToGround
+            this.drawWall(XSameIdPositions[i], YSameIdPositions[i])
+            // có thể drawEmpty, drawWall, fellToGround
+            this.drawWall(XSameIdPositions[XSameIdPositions.length - 1], YSameIdPositions[XSameIdPositions.length - 1])
+            trueChoiceCounter += 2;
+        }, 600)
+    }
+
+    addRandomPokemon() {
+        let XNullIdPositions = []
+        let YNullIdPositions = []
+        for (let row = 1; row < ROWS - 1; row++) {
+            for (let col = 1; col < COLS - 1; col++) {
+                if (positions.get(col + '-' + row) === null) {
+                    XNullIdPositions.push(col);
+                    YNullIdPositions.push(row);
+                }
+            }
+        }
+        if (XNullIdPositions.length >= 2) {
+            if (XNullIdPositions.length <= 6) {
+                let pokemonId = randomNotNullNotUndefinedPokemonId();//cần xử lý ko null, ko wall, ko đc cùng id
+                this.drawCell(XNullIdPositions[0], YNullIdPositions[0], pokemonId)
+                this.drawCell(XNullIdPositions[XNullIdPositions.length - 1], YNullIdPositions[YNullIdPositions.length - 1], pokemonId)
+                trueChoiceCounter -= 2;
+            } else {
+                let pokemonId = randomNotNullNotUndefinedPokemonId();
+                this.drawCell(XNullIdPositions[0], YNullIdPositions[0], pokemonId)
+                this.drawCell(XNullIdPositions[XNullIdPositions.length - 1], YNullIdPositions[YNullIdPositions.length - 1], pokemonId)
+                console.log("1: ", pokemonId, XNullIdPositions[0], YNullIdPositions[0], XNullIdPositions[XNullIdPositions.length - 1], YNullIdPositions[YNullIdPositions.length - 1])
+
+                let tempArr = XNullIdPositions;
+                let index1 = Math.floor(Math.random() * tempArr.length - 2) + 1;
+                tempArr.splice(index1, 1)
+                let index2 = Math.floor(Math.random() * tempArr.length - 2) + 1;
+                pokemonId = randomNotNullNotUndefinedPokemonId();
+                this.drawCell(XNullIdPositions[index1], YNullIdPositions[index1], pokemonId)
+                this.drawCell(XNullIdPositions[index2], YNullIdPositions[index2], pokemonId)
+                console.log("2: ", pokemonId, XNullIdPositions[index1], YNullIdPositions[index1], XNullIdPositions[index2], YNullIdPositions[index2])
+                trueChoiceCounter -= 4;
+            }
+        }
     }
 
     /*
@@ -809,8 +865,18 @@ function checkPathBFS(x_start, y_start, x_end, y_end) {
  randomPokemonId function: trả về ngẫu nhiên id của pokemon
  */
 function randomPokemonId() {
-    let keysArray = Array.from(pokemonMap.keys());
-    return parseInt(Math.floor(Math.random() * keysArray.length) + 1);
+    let valuesArray = Array.from(pokemonMap.keys());
+    return parseInt(Math.floor(Math.random() * valuesArray.length) + 1);
+}
+
+function randomNotNullNotUndefinedPokemonId() {
+    let valuesArray = Array.from(pokemonMap.keys());
+    for (let i = 0; i < valuesArray.length; i++) {
+        if (valuesArray[i] == null || valuesArray[i] === undefined) {
+            valuesArray.splice(i, 1);
+        }
+    }
+    return parseInt(Math.floor(Math.random() * valuesArray.length) + 1);
 }
 
 
@@ -823,9 +889,14 @@ const changeBtn = document.getElementById('change-btn');
 
 // coundown function: đếm ngược thời gian
 let number = TIME;
-
+let secondCounter = SECOND_COUNTER_ADD_POKEMON;//90s tạo 1 add pokemon
 function coundown() {
     number--;
+    secondCounter--;
+    if (LEVEL >= 5 && secondCounter === 0) {
+        board.addRandomPokemon();
+        secondCounter = SECOND_COUNTER_ADD_POKEMON;
+    }
     if (isGameOver === true) {
         document.getElementById("timer").innerHTML = "Congratulations";
         return false;
@@ -852,6 +923,8 @@ playBtn.addEventListener('click', function () {
     playBtn.style.display = "none";
     levelBox.disabled = true;
     levelBox.style.display = "none";
+
+    document.getElementById("title").innerHTML = "Connect Pikachu Game - Level: " + LEVEL;
     document.getElementsByTagName("body")[0].style.backgroundImage = "url('/images/bg2.jpg')";
     board = new Board(ctx);
     console.log(LEVEL)
@@ -862,7 +935,7 @@ playBtn.addEventListener('click', function () {
     } else if (LEVEL === 4) {
         board.drawBoardLevel4();
     } else if (LEVEL === 5) {
-
+        board.drawBoardLevel4();
     } else if (LEVEL === 6) {
 
     } else if (LEVEL === 7) {
@@ -905,6 +978,8 @@ replayBtn.addEventListener('click', function () {
     } else if (LEVEL === 3) {
         board.drawBoardLevel2()
     } else if (LEVEL === 4) {
+        board.drawBoardLevel4();
+    } else if (LEVEL === 5) {
         board.drawBoardLevel4();
     } else {
         board.drawBoardLevel1()
