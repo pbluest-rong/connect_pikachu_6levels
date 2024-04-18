@@ -17,6 +17,10 @@ let countdownTimeout;
  WALL_NUMBER: số lượng ô WALL, mặc định là 8 ô
  */
 const WALL_NUMBER = 8;//level 2
+const BALL_NUMBER = 6;//level 4
+let ballId;
+let XballPostions = []
+let YballPostions = []//x1,y1,x2,y2,x3,y3
 /*
 image data set source: https://www.kaggle.com/datasets/hlrhegemony/pokemon-image-dataset
  */
@@ -156,6 +160,25 @@ class Board {
         };
     }
 
+    drawBallList() {
+        // Vẽ ball
+        XballPostions = []
+        YballPostions = []
+        for (let row = 1; row < ROWS - 1; row++) {
+            for (let col = 1; col < COLS - 1; col++) {
+                if (positions.get(col + '-' + row) === ballId) {
+                    XballPostions.push(col);
+                    YballPostions.push(row);
+                }
+            }
+        }
+        for (let i = 0; i < XballPostions.length; i++) {
+            let x = XballPostions[i];
+            let y = YballPostions[i]
+            this.drawBall(x, y)
+        }
+    }
+
     // drawImage function: vẽ image lên 1 ô
     drawImage(xAxis, yAxis, pokemonId) {
         let path = pokemonMap.get(pokemonId);
@@ -259,6 +282,17 @@ class Board {
         this.ctx.globalAlpha = 1;
     }
 
+    drawBorder(xAxis, yAxis) {
+        this.ctx.strokeStyle = 'blue';
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeRect(
+            xAxis * BLOCK_SIZE,
+            yAxis * BLOCK_SIZE,
+            BLOCK_SIZE,
+            BLOCK_SIZE
+        );
+    }
+
     /*
     removePokemon function: thay đổi giá trị của ô trong positions là null. Điều này thể hiện ô đó có thể thông qua
      */
@@ -297,22 +331,58 @@ class Board {
                         // Xử lý kết quả đường đi thu được
                         if (dfs != null) {
                             trueChoiceCounter += 2;
+                            // LEVEL: CHECK GAME OVER
                             if (LEVEL === 1 && trueChoiceCounter === (ROWS - 2) * (COLS - 2)
-                                || LEVEL === 2 && trueChoiceCounter === (ROWS - 2) * (COLS - 2) - WALL_NUMBER) {
+                                || LEVEL >= 2 && trueChoiceCounter === (ROWS - 2) * (COLS - 2) - WALL_NUMBER) {
                                 isGameOver = true;
                             }
                             this.removePokemon(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col);
                             this.drawLines(dfs)
                             //     level 3
-                            if (LEVEL === 3) {
-                                this.handleLevel3(this.first_Pos_Row, this.first_Pos_Col, 600);
-                                this.handleLevel3(this.last_Pos_Row, this.last_Pos_Col, 700);
+                            if (LEVEL >= 3) {
+                                this.handleLevel_3(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col);
+                            }
+                            if (LEVEL >= 4) {
+                                if (checkBallPoint(this.first_Pos_Row, this.first_Pos_Col) !== null && checkBallPoint(this.last_Pos_Row, this.last_Pos_Col) !== null) {
+                                    this.removeRandomPokemon(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col);
+                                    // remove ball positions
+                                    let FirstBallIndex = checkBallPoint(this.first_Pos_Row, this.first_Pos_Col);
+                                    let SecondBallIndex = checkBallPoint(this.last_Pos_Row, this.last_Pos_Col);
+                                    if (FirstBallIndex !== null) {
+                                        console.log("deleted ball 1", FirstBallIndex)
+                                        XballPostions.splice(FirstBallIndex, 1)
+                                        YballPostions.splice(FirstBallIndex, 1)
+                                    }
+                                    if (SecondBallIndex !== null) {
+                                        if (FirstBallIndex < SecondBallIndex) {
+                                            console.log("deleted ball 2", SecondBallIndex)
+                                            XballPostions.splice(SecondBallIndex - 1, 1);
+                                            YballPostions.splice(SecondBallIndex - 1, 1)
+                                        } else {
+                                            console.log("deleted ball 2", SecondBallIndex)
+                                            XballPostions.splice(SecondBallIndex, 1);
+                                            YballPostions.splice(SecondBallIndex, 1)
+                                        }
+                                    }
+                                    console.log("BALL TWO")
+                                }
+
                             }
                         }
                     }
                     // Thiết lập lại giá trị first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col
-                    this.drawImage(this.first_Pos_Row, this.first_Pos_Col, positions.get(this.first_Pos_Row + "-" + this.first_Pos_Col))
-                    this.drawImage(this.last_Pos_Row, this.last_Pos_Col, positions.get(this.last_Pos_Row + "-" + this.last_Pos_Col))
+                    if (checkBallPoint(this.first_Pos_Row, this.first_Pos_Col) !== null) {
+                        //     ball
+                        this.drawBall(this.first_Pos_Row, this.first_Pos_Col)
+                    } else {
+                        this.drawImage(this.first_Pos_Row, this.first_Pos_Col, positions.get(this.first_Pos_Row + "-" + this.first_Pos_Col))
+                    }
+                    if (checkBallPoint(this.last_Pos_Row, this.last_Pos_Col) !== null) {
+                        //     ball
+                        this.drawBall(this.last_Pos_Row, this.last_Pos_Col)
+                    } else {
+                        this.drawImage(this.last_Pos_Row, this.last_Pos_Col, positions.get(this.last_Pos_Row + "-" + this.last_Pos_Col))
+                    }
 
                     this.first_Pos_Row = null;
                     this.first_Pos_Col = null;
@@ -324,9 +394,33 @@ class Board {
         }
     }
 
-    handleLevel3(x, y, time) {
+    handleLevel_3(first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col) {
+        if (LEVEL >= 3) {
+            if (first_Pos_Row !== last_Pos_Row) {
+                // Nếu first_Pos_Row khác last_Pos_Row
+                if (first_Pos_Row < last_Pos_Row) {
+                    this.fellToGround(first_Pos_Row, first_Pos_Col, 600);
+                    this.fellToGround(last_Pos_Row, last_Pos_Col, 650);
+                } else {
+                    this.fellToGround(last_Pos_Row, last_Pos_Col, 600);
+                    this.fellToGround(first_Pos_Row, first_Pos_Col, 650);
+                }
+            } else {
+                // Nếu first_Pos_Row bằng last_Pos_Row
+                if (first_Pos_Col < last_Pos_Col) {
+                    this.fellToGround(first_Pos_Row, first_Pos_Col, 600);
+                    this.fellToGround(last_Pos_Row, last_Pos_Col, 650);
+                } else {
+                    this.fellToGround(last_Pos_Row, last_Pos_Col, 600);
+                    this.fellToGround(first_Pos_Row, first_Pos_Col, 650);
+                }
+            }
+        }
+    }
+
+    fellToGround(x, y, time) {
         setTimeout(() => {
-            if (this.positions.get(x + '-' + y)  === null) {
+            if (this.positions.get(x + '-' + y) === null) {
                 for (let i = y - 1; i > 0; i--) {
                     let id = this.positions.get(x + '-' + i);
                     if (id === undefined) {
@@ -336,10 +430,61 @@ class Board {
                         this.positions.set(x + '-' + i, null);
                         this.drawCell(x, (i + 1), id)
                         this.drawCell(x, i, null)
+                        let checkBall = checkBallPoint(x, i);
+                        if (checkBall !== null) {
+                            YballPostions[checkBall] = i + 1;
+                            this.drawBall(x, i + 1)
+                        }
                     }
                 }
             }
         }, time)
+    }
+
+    removeRandomPokemon(first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col) {
+            //    random pokemonId trong map
+            let number = Math.floor(Math.random() * 6) + 1;
+            let x = Math.floor(COLS / number)
+            let y = Math.floor(ROWS / number)
+            let pokemonId = positions.get(x + '-' + y)
+
+            // 2 ô xóa phải cùng id, không là ball, không là wall, không là first, last
+            while (pokemonId === null || pokemonId === undefined
+            || checkBallPoint(x, y) !== null
+            || (x === first_Pos_Row && y === first_Pos_Col)
+            || (x === last_Pos_Row && y === last_Pos_Col)) {
+                pokemonId = randomPokemonId();
+            }
+
+            // luu cac pos cung id
+            let XSameIdPositions = []
+            let YSameIdPositions = []
+            for (let row = 1; row < ROWS - 1; row++) {
+                for (let col = 1; col < COLS - 1; col++) {
+                    if (positions.get(col + '-' + row) === pokemonId) {
+                        XSameIdPositions.push(col);
+                        YSameIdPositions.push(row);
+                    }
+                }
+            }
+            // set null + ve lai:
+            let i = 0;
+            console.log("arr same remove Id Size", XSameIdPositions.length)
+            console.log("removed Id Two Pokemon 1: ", pokemonId, XSameIdPositions[i], YSameIdPositions[i])
+            console.log("removed Id Two Pokemon 2: ", pokemonId, XSameIdPositions[XSameIdPositions.length - 1], YSameIdPositions[XSameIdPositions.length - 1])
+            // hiệu ứng
+
+                this.drawChoice(XSameIdPositions[i], YSameIdPositions[i])
+                this.drawChoice(XSameIdPositions[XSameIdPositions.length - 1], YSameIdPositions[XSameIdPositions.length - 1])
+            // null + vẽ lại
+            setTimeout(() => {
+                this.positions.set(XSameIdPositions[i] + '-' + YSameIdPositions[i], null);
+                this.positions.set(XSameIdPositions[XSameIdPositions.length - 1] + '-' + YSameIdPositions[XSameIdPositions.length - 1], null);
+                // có thể drawEmpty, drawWall, fellToGround
+                this.drawWall(XSameIdPositions[i], YSameIdPositions[i])
+                // có thể drawEmpty, drawWall, fellToGround
+                this.drawWall(XSameIdPositions[XSameIdPositions.length - 1], YSameIdPositions[XSameIdPositions.length - 1])
+            }, 600)
     }
 
     /*
@@ -447,6 +592,22 @@ class Board {
         }
     }
 
+    drawBoardLevel4() {
+        XballPostions = []
+        YballPostions = []
+        this.drawBoardLevel2();
+        //     duyệt all cho tới khi ballPositions.leng = BALL_NUMBER-> 2 ô nào có id trùng nhau -> add vào ballPositions
+        // random id => duyệt xem map có bao nhiêu trong arr = x,y,x,y,...
+        // ballPositions = [arr[0],arr[1],arr[arr.length / 2],arr[arr.length/2 + 1],arr[arr.length-2], arr[arr.length-1]
+        let x = Math.floor(COLS / 2)
+        let y = Math.floor(ROWS / 2)
+        ballId = positions.get(x + '-' + y)
+        while (ballId === null || ballId === undefined) {
+            ballId = randomPokemonId()
+        }
+        this.drawBallList()
+    }
+
     /*
     change function: xáo trộn bản đồ pokemon hiện tại
      */
@@ -454,9 +615,12 @@ class Board {
         if (CHANGE_NUMBER > 0) {
             // Lấy danh sách các ô không là null và undefined trong positions
             let keys = Array.from(positions.keys()).filter(
-                key => positions.get(key) !== null &&
-                    // level 2
-                    positions.get(key) !== undefined);
+                key => {
+                    return positions.get(key) !== null
+                        // level 2
+                        && positions.get(key) !== undefined
+                }
+            );
 
             for (let i = 0; i < keys.length; i++) {
                 // Chọn ngẫu nhiên 2 khóa từ danh sách
@@ -487,6 +651,7 @@ class Board {
                 }
                 index++;
             }
+            this.drawBallList()
             // giảm 1 đơn vị của CHANGE_NUMBER
             CHANGE_NUMBER -= 1;
             document.getElementById("chance-counter").innerHTML = CHANGE_NUMBER;
@@ -511,6 +676,15 @@ class Point {
     toString() {
         return "[" + this.x + ", " + this.y + ", " + this.zigzag + "]";
     }
+}
+
+function checkBallPoint(x, y) {
+    for (let i = 0; i < XballPostions.length; i++) {
+        if (x === XballPostions[i] && y === YballPostions[i]) {
+            return i;
+        }
+    }
+    return null;
 }
 
 // getChild function: lấy các ô kề của một ô mà các ô đó có giá trị pokemonId là null hoặc là vị trí đích đến (endPoint)
@@ -686,7 +860,7 @@ playBtn.addEventListener('click', function () {
     } else if (LEVEL === 3) {
         board.drawBoardLevel2();
     } else if (LEVEL === 4) {
-
+        board.drawBoardLevel4();
     } else if (LEVEL === 5) {
 
     } else if (LEVEL === 6) {
@@ -730,6 +904,8 @@ replayBtn.addEventListener('click', function () {
         board.drawBoardLevel2()
     } else if (LEVEL === 3) {
         board.drawBoardLevel2()
+    } else if (LEVEL === 4) {
+        board.drawBoardLevel4();
     } else {
         board.drawBoardLevel1()
     }
