@@ -20,59 +20,92 @@
 </head>
 <body>
 <div class="container">
+    <p id="timer"></p>
+    <div id="clickTimer" style="color: red; font-size: 50px"></div>
     <canvas id="board" style="margin-top: 5px; margin-left: 10px; margin-right: 10px;"></canvas>
-    <div style="position: absolute; right: 0; top: 0">
+    <div style="position: absolute; right: 0; top: 0; display: flex">
         <button class="btn" id="change-btn" style="display: none"><i class="fa-solid fa-rotate"></i></button>
-        <div id="chance-counter" style="position: absolute; top: 5px; left: 15px; color: red; display: none"></div>
+        <div id="chance-counter" style="position: absolute; top: 5px; right: 15px; color: red; display: none"></div>
     </div>
     <div class="side-bar">
-        <p id="timer"></p>
         <div class="title" id="title">
             Connect Pikachu Game
         </div>
     </div>
     <div class="level-box" id="level-box">
-        <div class="level">
+        <div class="level" title="Level: Beginner">
             <input type="radio" id="level_1" name="level" value="1" checked/>
             <label for="level_1">1</label>
         </div>
-        <div class="level">
+        <div class="level" title="Level: Intermediate">
             <input type="radio" id="level_2" name="level" value="2"/>
             <label for="level_2">2</label>
         </div>
-        <div class="level">
+        <div class="level" title="Level: Advanced">
             <input type="radio" id="level_3" name="level" value="3"/>
             <label for="level_3">3</label>
         </div>
-        <div class="level">
+        <div class="level" title="Level: Expert">
             <input type="radio" id="level_4" name="level" value="4"/>
             <label for="level_4">4</label>
         </div>
-        <div class="level">
+        <div class="level" title="Level: Master">
             <input type="radio" id="level_5" name="level" value="5"/>
             <label for="level_5">5</label>
         </div>
-        <div class="level">
+        <div class="level" title="Level: Legendary">
             <input type="radio" id="level_6" name="level" value="6"/>
             <label for="level_6">6</label>
-        </div>
-        <div class="level">
-            <input type="radio" id="level_7" name="level" value="7"/>
-            <label for="level_7">7</label>
-        </div>
-        <div class="level">
-            <input type="radio" id="level_8" name="level" value="8"/>
-            <label for="level_8">8</label>
         </div>
     </div>
     <div class="btn-group">
         <button class="btn" id="play-btn">Play</button>
         <button class="btn" id="exit-btn" style="display:none;" title="Exit" onclick="exit()"><i class="fa-solid fa-backward"></i></button>
         <button class="btn" id="guide-btn" title="Guide" onclick="showGuide()"><i class="fa-solid fa-book"></i></button>
+        <button class="btn" id="infor-btn" title="Information" onclick="showInformation()"><i class="fa-solid fa-user"></i></button>
+        <button class="btn" id="link-btn" title="Video Demo" onclick="showLink()"><i class="fa-brands fa-youtube"></i></button>
         <button class="btn" id="replay-btn" style="display:none;" title="Replay"><i class="fa-solid fa-rotate-right"></i></button>
     </div>
+    <div id="information-box">
+        <div class="title">Thông tin cá nhân</div>
+        <div class="inforItem">Họ và tên: Lê Bá Phụng</div>
+        <div class="inforItem">Giới tính: Nam</div>
+        <div class="inforItem">Quê quán: Quảng Trị</div>
+        <div class="inforItem">Năm sinh: 2003</div>
+        <div class="inforItem">Học tại trường Đại học Nông Lâm TPHCM</div>
+        <div class="inforItem">Lớp: DH21DTC</div>
+        <div class="inforItem">Mã số sinh viên: 21130482</div>
+        <div style="text-align: center">
+            <button class="btn" id="hideInfor-btn" onclick="hideInformation()">OK</button>
+        </div>
+    </div>
     <div id="guide-box">
-        <div>Hướng dẫn chơi Connect Pokemon Game</div>
+        <div class="title">Hướng dẫn chơi Connect Pokemon Game</div>
+        <div class="inforItem">1.Giới thiệu</div>
+        <div class="more">
+            Connect pikachu là một trò chơi thú vị trong 10 phút. Nhiệm vụ của bạn là kết nối
+            các cặp hình Pokemon giống nhau bằng cách tạo một đường kẻ không quá 3 đoạn thẳng.
+            Bạn chỉ có thể kết nối các hình Pokemon nếu không có hình khác cản trở trên đường giữa chúng.
+            Trò chơi kết thúc khi hết thời gian hoặc khi bạn đã nối hết tất cả các cặp pokemon.
+        </div>
+        <div style="display: flex; justify-content: space-between">
+            <img src="images/g1.png" alt="" sizes="" srcset="">
+            <img src="images/g2.png" alt="" sizes="" srcset="">
+            <img src="images/g3.png" alt="" sizes="" srcset="">
+            <img src="images/g4.png" alt="" sizes="" srcset="">
+        </div>
+        <div class="inforItem">2.Khác biệt về cách chơi trong từng Level</div>
+        <div class="more"><i class="fa-solid fa-circle"></i> Level 1 - Beginner</div>
+
+        <div class="more"><i class="fa-solid fa-circle"></i> Level 2 - Intermediate</div>
+
+        <div class="more"><i class="fa-solid fa-circle"></i> Level 3 - Advanced</div>
+
+        <div class="more"><i class="fa-solid fa-circle"></i> Level 4 - Expert</div>
+
+        <div class="more"><i class="fa-solid fa-circle"></i> Level 5 - Master</div>
+
+        <div class="more"><i class="fa-solid fa-circle"></i> Level 6 - Legendary</div>
         <div style="text-align: center">
             <button class="btn" id="ok-btn" onclick="hideGuide()">OK</button>
         </div>

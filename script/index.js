@@ -1,30 +1,30 @@
 /*
 21130482_LeBaPhung_0336677141_DH21DTC
+
+source code: https://github.com/pbluest-rong/connect-pikachu-game
+Từ khóa: x là thứ dòng của ô, y là thứ cột của y
  */
-// github: https://github.com/pbluest-rong/connect-pikachu-game
 const COLS = 16 + 2;
 const ROWS = 8 + 2;
 const BLOCK_SIZE = 55;
-const TIME = 10 * 60;
-const SECOND_COUNTER_ADD_POKEMON = 60;
+const TIME = 10 * 60 + 1;
+const CLICK_SECOND_COUNTER_ADD_POKEMON = 30 + 1;//15s nếu ko click đúng 2 ô thì thêm 2 hoặc 4 pokemon
 let CHANGE_NUMBER = 5;
 let LEVEL = 1;
 let board;
-/*
- countdownTimeout: sử dụng để hủy và bắt đầu time khi play/replay trò chơi
- */
+//countdownTimeout: sử dụng để hủy và bắt đầu tiến trình đếm thời gian khi play/replay trò chơi
 let countdownTimeout;
-/*
- WALL_NUMBER: số lượng ô WALL, mặc định là 8 ô
- */
-const WALL_NUMBER = 8;//level 2
-const BALL_NUMBER = 6;//level 4
+// WALL_NUMBER: số lượng ô WALL; dùng cho level 2 trở lên
+let WALL_NUMBER = 8;
+// BALL_NUMBER: số lượng ô BALL; dùng cho level 4 trở lên
+const BALL_NUMBER = 6;
+// ballId: là Id của một pokemon bất kỳ trên bản đồ, dùng để vẽ Ball đè lên hình ảnh của pokemon đó
 let ballId;
-let XballPostions = []
-let YballPostions = []//x1,y1,x2,y2,x3,y3
-/*
-image data set source: https://www.kaggle.com/datasets/hlrhegemony/pokemon-image-dataset
- */
+// XballPostions: là mảng chứa các thứ dòng của các Ball
+let XballPostions = []//e.g. [x1,x2,x3,x4]
+// XballPostions: là mảng chứa các thứ cột của các Ball
+let YballPostions = []//e.g. [y1,y2,y3,y4]
+// Nguồn image data set: https://www.kaggle.com/datasets/hlrhegemony/pokemon-image-dataset
 const imgs = [
     "images/pokemon-set/1.jpg",
     "images/pokemon-set/2.jpg",
@@ -54,26 +54,22 @@ const imgs = [
     "images/pokemon-set/26.jpg",
     "images/pokemon-set/27.jpg",
 ];
-/*
-pokemonMap: lưu key là id của 1 pokemon và value là ảnh tương ứng, giá trị bắt đầu = 1;
- */
+// pokemonMap: key là id của 1 pokemon và value là ảnh tương ứng, giá trị bắt đầu = 1;
 let pokemonMap = new Map();
 for (let i = 0; i < imgs.length; i++) {
     pokemonMap.set(i + 1, imgs[i]);
 }
-/*
-positions: lưu vị trí pokemon tương ứng với 1 ô
-e.g. ô có row là 1 và col là 1 chứa pokemon id là 3 thì giá trị tương ứng trong positions là <1-1, 3>
- */
+// positions: lưu vị trí pokemon tương ứng với 1 ô
+// Key là x-y, value là pokemon id tương ứng trong pokemonMap variable
+// e.g. ô có x là 1 và y là 1 chứa pokemon id là 3 thì giá trị tương ứng trong positions là <1-1, 3>
 let positions = new Map();
-/*
-isGameOver: khi hết thời gian hoặc người chơi thắng cuộc thì isGameOver có giá trị là true. Ngược lại, isGameOver có giá trị là false
- */
+// isGameOver: khi hết thời gian hoặc người chơi thắng cuộc thì isGameOver có giá trị là true. Ngược lại, isGameOver có giá trị là false
 let isGameOver = false;
 /*
  trueChoiceCounter:
- Thay vì duyệt qua tất cả các ô để biết người chơi đã thắng. Biến trueChoiceCounter sẽ thêm 2 đơn vị khi người chơi chọn 2 ô có đường nối.
- Cho tới khi giá trị trueChoiceCounter bằng số ô mà pokemon id tương ứng trong positions khác null và khác undefined.
+ Thay vì duyệt qua tất cả các ô để biết người chơi đã thắng.
+ Biến trueChoiceCounter sẽ thay đổi phù hợp
+ Vượt qua trò chơi khi giá trị trueChoiceCounter bằng số ô mà pokemon id tương ứng trong positions khác null và khác undefined.
  Giá trị ban đầu là 0
  */
 let trueChoiceCounter = 0;
@@ -370,6 +366,10 @@ class Board {
                             if (LEVEL >= 3) {
                                 this.handleLevel_3(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col);
                             }
+                            if (LEVEL >= 5) {
+                                clickTimer = CLICK_SECOND_COUNTER_ADD_POKEMON;
+                            }
+                            console.log("==============>>>>>>>", trueChoiceCounter, (ROWS - 2) * (COLS - 2) - WALL_NUMBER)
                         }
                     }
                     // Thiết lập lại giá trị first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col
@@ -488,23 +488,29 @@ class Board {
         }
         // set null + ve lai:
         let i = 0;
-        console.log("arr same remove Id Size", XSameIdPositions.length)
-        console.log("removed Id Two Pokemon 1: ", pokemonId, XSameIdPositions[i], YSameIdPositions[i])
-        console.log("removed Id Two Pokemon 2: ", pokemonId, XSameIdPositions[XSameIdPositions.length - 1], YSameIdPositions[XSameIdPositions.length - 1])
-        // hiệu ứng
+        let x1 = XSameIdPositions[i];
+        let y1 = YSameIdPositions[i];
+        let x2 = XSameIdPositions[XSameIdPositions.length - 1];
+        let y2 = YSameIdPositions[XSameIdPositions.length - 1];
+        // console.log("arr same remove Id Size", XSameIdPositions)
+        // console.log("removed Id Two Pokemon 1: ", pokemonId, i, x1,y1, positions.get(x1 + '-' + y1))
+        // console.log("removed Id Two Pokemon 2: ", pokemonId, i, x2,y2, positions.get(x2 + '-' + y2))
 
-        this.drawChoice(XSameIdPositions[i], YSameIdPositions[i])
-        this.drawChoice(XSameIdPositions[XSameIdPositions.length - 1], YSameIdPositions[XSameIdPositions.length - 1])
+        // hiệu ứng
+        this.drawChoice(x1, y1)
+        this.drawChoice(x2, y2)
         // null + vẽ lại
-        setTimeout(() => {
-            this.positions.set(XSameIdPositions[i] + '-' + YSameIdPositions[i], null);
-            this.positions.set(XSameIdPositions[XSameIdPositions.length - 1] + '-' + YSameIdPositions[XSameIdPositions.length - 1], null);
-            // có thể drawEmpty, drawWall, fellToGround
-            this.drawWall(XSameIdPositions[i], YSameIdPositions[i])
-            // có thể drawEmpty, drawWall, fellToGround
-            this.drawWall(XSameIdPositions[XSameIdPositions.length - 1], YSameIdPositions[XSameIdPositions.length - 1])
-            trueChoiceCounter += 2;
-        }, 600)
+        if (XSameIdPositions.length >= 2) {
+            setTimeout(() => {
+                WALL_NUMBER += 2;
+                this.positions.set(x1 + '-' + y1, null);
+                this.positions.set(x2 + '-' + y2, null);
+                // có thể drawEmpty, drawWall, fellToGround
+                this.drawWall(x1, y1)
+                // có thể drawEmpty, drawWall, fellToGround
+                this.drawWall(x2, y2)
+            }, 600)
+        }
     }
 
     addRandomPokemon() {
@@ -707,7 +713,9 @@ class Board {
                 }
                 index++;
             }
-            this.drawBallList()
+            if (LEVEL >= 4) {
+                this.drawBallList()
+            }
             // giảm 1 đơn vị của CHANGE_NUMBER
             CHANGE_NUMBER -= 1;
             document.getElementById("chance-counter").innerHTML = CHANGE_NUMBER;
@@ -716,16 +724,16 @@ class Board {
 }
 
 /*
- Point class: 1 point sẽ tương ứng 1 ô, bao gồm các thuộc tính
- + x, y: vị trí trên canvas
- + parent_Point: dùng để lưu Point cha khi tìm đường đi của thuật toán tìm đường đi
- + zigzag: thể hiện số lần gấp khúc trên đường đi của thuật toán tìm đường đi
+ Point class: 1 point sẽ tương ứng 1 ô để dễ xử lý logic thuật toán tìm đường nối 2 ô
  */
 class Point {
     constructor(x, y, zigzag) {
+        // + x, y: vị trí trên canvas
         this.x = x;
         this.y = y;
+        //  + parent_Point: dùng để lưu Point cha khi tìm đường đi của thuật toán tìm đường đi
         this.parent_Point = null;
+        //  + zigzag: thể hiện số lần gấp khúc trên đường đi của thuật toán tìm đường đi
         this.zigzag = zigzag;
     }
 
@@ -734,6 +742,12 @@ class Point {
     }
 }
 
+/**
+ * Trả về index trong mảng XballPostions, YballPostions
+ * @param {number} x tương ứng dòng thứ
+ * @param {number} y tương ứng cột thứ
+ * @return {number} index nếu vị trí ô đó là Ball. Còn không null
+ */
 function checkBallPoint(x, y) {
     for (let i = 0; i < XballPostions.length; i++) {
         if (x === XballPostions[i] && y === YballPostions[i]) {
@@ -743,7 +757,14 @@ function checkBallPoint(x, y) {
     return null;
 }
 
-// getChild function: lấy các ô kề của một ô mà các ô đó có giá trị pokemonId là null hoặc là vị trí đích đến (endPoint)
+/**
+ * Trả về danh sách các ô kề của một ô mà các ô có giá trị pokemonId là null hoặc là vị trí đích đến.
+ * Điều kiện giá trị zigzag không vượt quá 3
+ * @param currentPoint
+ * @param x_end
+ * @param y_end
+ * @return {*[]}
+ */
 function getChild(currentPoint, x_end, y_end) {
     let list = []
     let childPoint;
@@ -786,7 +807,10 @@ function getChild(currentPoint, x_end, y_end) {
     return list;
 }
 
-// setZigzag function: tìm zigzag dựa vào parentPoint
+/**
+ * Tìm và thay đổi giá trị zigzag dựa vào parentPoint của một Point
+ * @param point
+ */
 function setZigzag(point) {
     if (point.parent_Point === null) {
         point.zigzag = 0;
@@ -807,15 +831,19 @@ function setZigzag(point) {
     }
 }
 
-/*
- checkPathBFS function: thuật toán tìm đường đi ngắn giữa 2 điểm
+/**
+ Thuật toán tìm đường đi ngắn giữa 2 Point
+ @param x_start giá trị x của điểm bắt đầu
+ @param y_start giá trị y của điểm bắt đầu
+ @param x_end giá trị x của điểm đến
+ @param y_end giá trị y của điểm đến
+ @return Point Nếu tìm được đường đi thì trả về điểm đến. Còn không, trả về null
  */
 function checkPathBFS(x_start, y_start, x_end, y_end) {
     if (getChild(new Point(x_end, y_end, 0), x_end, y_end) === null) {
         return null;
     }
-
-    let queue = []//chua dinh dang xet
+    let queue = []//chứa các Point chứa duyệt
     let currentPoint = new Point(x_start, y_start, 0);
     queue.push(currentPoint)
     let minDistance = Number.MAX_SAFE_INTEGER;
@@ -835,19 +863,21 @@ function checkPathBFS(x_start, y_start, x_end, y_end) {
             let childPoints = getChild(currentPoint, x_end, y_end)
             for (let i = 0; i < childPoints.length; i++) {
                 let e = childPoints[i];
-                if (!queue.some(child => child.x === e.x && child.y === e.y && child.zigzag !== e.zigzag
+                //
+                if (
+                    !queue.some(child => child.x === e.x && child.y === e.y && child.zigzag !== e.zigzag
                         && child.parent_Point.zigzag === e.parent_Point.zigzag)
                     && !visited.some(child => child.x === e.x && child.y === e.y && child.zigzag === e.zigzag
                         && child.parent_Point.zigzag === e.parent_Point.zigzag
                         && child.parent_Point.x === e.parent_Point.x
-                        && child.parent_Point.y
-                        === e.parent_Point.y)
+                        && child.parent_Point.y === e.parent_Point.y)
                 ) {
+                    // Nếu Point đang xét là điểm đến thì đưa vào đầu queue
                     if (e.x === x_end && e.y === y_end) {
                         queue.unshift(e)
                     } else {
+                        // ưu tiên khoảng cách gần hơn so với điểm đến
                         queue.push(e);
-                        // ưu tiên kc gần hơn
                         queue.sort((a, b) => (
                             Math.sqrt((Math.pow(a.x - x_end, 2) + Math.pow(a.y - y_end, 2)))
                             -
@@ -861,14 +891,19 @@ function checkPathBFS(x_start, y_start, x_end, y_end) {
     return null;
 }
 
-/*
- randomPokemonId function: trả về ngẫu nhiên id của pokemon
+/**
+ * Trả về ngẫu nhiên id từ danh sách pokemonMap
+ @return {number}
  */
 function randomPokemonId() {
     let valuesArray = Array.from(pokemonMap.keys());
     return parseInt(Math.floor(Math.random() * valuesArray.length) + 1);
 }
 
+/**
+ * Trả về ngẫu nhiên id không là nyll hoặc undefined từ danh sách pokemonMap
+ * @return {number}
+ */
 function randomNotNullNotUndefinedPokemonId() {
     let valuesArray = Array.from(pokemonMap.keys());
     for (let i = 0; i < valuesArray.length; i++) {
@@ -879,23 +914,25 @@ function randomNotNullNotUndefinedPokemonId() {
     return parseInt(Math.floor(Math.random() * valuesArray.length) + 1);
 }
 
-
-// Giao diện ban đầu
-initGame()
 const playBtn = document.getElementById('play-btn');
 const replayBtn = document.getElementById('replay-btn');
 const levelBox = document.getElementById('level-box');
 const changeBtn = document.getElementById('change-btn');
 
-// coundown function: đếm ngược thời gian
+/**
+ * Đếm ngược thời gian và xử lý của trò chơi
+ */
 let number = TIME;
-let secondCounter = SECOND_COUNTER_ADD_POKEMON;//90s tạo 1 add pokemon
+let clickTimer = CLICK_SECOND_COUNTER_ADD_POKEMON;//90s tạo 1 add pokemon
 function coundown() {
     number--;
-    secondCounter--;
-    if (LEVEL >= 5 && secondCounter === 0) {
-        board.addRandomPokemon();
-        secondCounter = SECOND_COUNTER_ADD_POKEMON;
+    clickTimer--;
+    if (LEVEL >= 5) {
+        document.getElementById("clickTimer").innerHTML = clickTimer;
+        if (clickTimer === 0) {
+            board.addRandomPokemon();
+            clickTimer = CLICK_SECOND_COUNTER_ADD_POKEMON;
+        }
     }
     if (isGameOver === true) {
         document.getElementById("timer").innerHTML = "Congratulations";
@@ -911,7 +948,9 @@ function coundown() {
     }
 }
 
-// Xử lý sự kiện các button
+// Khởi tạo giao diện ban đầu
+initGame()
+// Xử lý sự kiện các button chơi và sự kiện click ô trong canvas
 playBtn.addEventListener('click', function () {
     LEVEL = getChoiceLevel();
     // hủy time cũ
@@ -959,13 +998,13 @@ playBtn.addEventListener('click', function () {
         board.choiceId(cellX, cellY);
     });
 });
-
+// Xử lý sự kiện các button xáo trộn bản đồ
 changeBtn.addEventListener('click', function () {
     if (isGameOver === false) {
         board.change();
     }
 })
-
+// Xử lý sự kiện các button chơi lại màn trong trò chơi
 replayBtn.addEventListener('click', function () {
     // default setting
     number = 0;
@@ -981,6 +1020,7 @@ replayBtn.addEventListener('click', function () {
         board.drawBoardLevel4();
     } else if (LEVEL === 5) {
         board.drawBoardLevel4();
+        clickTimer = CLICK_SECOND_COUNTER_ADD_POKEMON;
     } else {
         board.drawBoardLevel1()
     }
@@ -1042,7 +1082,6 @@ function initGame() {
     return board
 }
 
-//showGuide
 function showGuide() {
     document.getElementById("guide-box").style.display = 'block'
 }
@@ -1051,16 +1090,31 @@ function hideGuide() {
     document.getElementById("guide-box").style.display = 'none'
 }
 
+function showInformation() {
+    document.getElementById("information-box").style.display = 'block'
+}
+
+function hideInformation() {
+    document.getElementById("information-box").style.display = 'none'
+}
+
 function exit() {
     // Sử dụng window.location để chuyển đến URL mới
     window.location.href = "index.html";
 }
+
+function showLink() {
+    window.open("https://www.youtube.com/@pbluest_rong", "_blank");
+}
+
 
 function showButtonForGame() {
     document.getElementById("change-btn").style.display = 'block';
     document.getElementById("chance-counter").style.display = 'block';
     document.getElementById("exit-btn").style.display = 'block';
     document.getElementById("replay-btn").style.display = 'block';
+    document.getElementById("infor-btn").style.display = 'none';
+    document.getElementById("link-btn").style.display = 'none';
 }
 
 function getChoiceLevel() {

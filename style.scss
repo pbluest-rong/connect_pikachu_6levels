@@ -32,13 +32,16 @@ body {
 .title {
   font-size: 18px;
   display: flex;
-  align-items: center;
+  justify-content: center;
   margin-bottom: 4px;
+  text-align: center;
 }
 
 p {
   color: yellow;
-  font-size:25px;
+  font-size:40px;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 .btn{
   background-color: $bt-color;
@@ -96,7 +99,7 @@ p {
 .level input[type="radio"]:checked + label {
   background-color: $bt-color;
 }
-#guide-box {
+#guide-box, #information-box {
   display: none;
   position: fixed;
   top: 50%;
@@ -108,4 +111,20 @@ p {
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Optional: Add a box shadow for a subtle effect */
+  img{
+    margin-left: 10px;
+    width: 20%;
+    height: 20%;
+  }
+  .more{
+    font-family: 'Arial', serif;
+    font-size: 18px;
+    margin: 5px 0;
+    padding-left: 15px;
+  }
+}
+.inforItem{
+  font-family: 'Arial', serif;
+  font-size: 20px;
+  padding: 5px 0;
 }
