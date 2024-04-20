@@ -8,7 +8,7 @@ const COLS = 16 + 2;
 const ROWS = 8 + 2;
 const BLOCK_SIZE = 55;
 const TIME = 10 * 60 + 1;
-const CLICK_SECOND_COUNTER_ADD_POKEMON = 30 + 1;//15s nếu ko click đúng 2 ô thì thêm 2 hoặc 4 pokemon
+const SECOND_COUNTER_ADD_POKEMON = 30+ 1;//15s nếu ko click đúng 2 ô thì thêm 2 hoặc 4 pokemon
 let CHANGE_NUMBER = 5;
 let LEVEL = 1;
 let board;
@@ -116,6 +116,9 @@ class Board {
             this.positions.set(xAxis + "-" + yAxis, pokemonId);
             if (pokemonId === null) {
                 this.drawEmpty(xAxis, yAxis)
+            } else if (pokemonId === undefined) {
+                console.log("okee")
+                this.drawWall(xAxis, yAxis);
             } else {
                 this.drawImage(xAxis, yAxis, pokemonId)
             }
@@ -358,18 +361,20 @@ class Board {
                                             YballPostions.splice(SecondBallIndex, 1)
                                         }
                                     }
-                                    console.log("BALL TWO")
                                 }
-
+                                if(LEVEL === 5){
+                                    timer = SECOND_COUNTER_ADD_POKEMON;
+                                }
                             }
                             //     level 3:
-                            if (LEVEL >= 3) {
-                                this.handleLevel_3(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col);
+                            if (LEVEL >= 3 && LEVEL !== 6) {
+                                this.handleLevel3(this.first_Pos_Row, this.first_Pos_Col, this.last_Pos_Row, this.last_Pos_Col);
                             }
-                            if (LEVEL >= 5) {
-                                clickTimer = CLICK_SECOND_COUNTER_ADD_POKEMON;
+                            if (LEVEL >= 6) {
+                                setTimeout(() => {
+                                    board.moveToOneCellReload()
+                                }, 600)
                             }
-                            console.log("==============>>>>>>>", trueChoiceCounter, (ROWS - 2) * (COLS - 2) - WALL_NUMBER)
                         }
                     }
                     // Thiết lập lại giá trị first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col
@@ -396,7 +401,7 @@ class Board {
         }
     }
 
-    handleLevel_3(first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col) {
+    handleLevel3(first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col) {
         if (LEVEL >= 3) {
             if (first_Pos_Row !== last_Pos_Row) {
                 // Nếu first_Pos_Row khác last_Pos_Row
@@ -552,7 +557,7 @@ class Board {
     /*
      drawBoardLevel1 function: Khởi tạo bản đồ ngẫu nhiên pokemon ở cấp level 1
      */
-    drawBoardLevel1() {
+    drawBasicBoard() {
         document.getElementById("chance-counter").innerHTML = CHANGE_NUMBER;
         showButtonForGame();
         let size = (COLS - 2) * (ROWS - 2)//chan
@@ -600,7 +605,7 @@ class Board {
         drawBoardLevel2 function: Khởi tạo bản đồ ngẫu nhiên pokemon ở cấp level 2.
         # Xuất hiện các ô WALL
     */
-    drawBoardLevel2() {
+    drawWallBoard() {
         document.getElementById("chance-counter").innerHTML = CHANGE_NUMBER;
         showButtonForGame();
         let size = (COLS - 2) * (ROWS - 2)//chan
@@ -654,10 +659,10 @@ class Board {
         }
     }
 
-    drawBoardLevel4() {
+    drawWallBallBoard() {
         XballPostions = []
         YballPostions = []
-        this.drawBoardLevel2();
+        this.drawWallBoard();
         //     duyệt all cho tới khi ballPositions.leng = BALL_NUMBER-> 2 ô nào có id trùng nhau -> add vào ballPositions
         // random id => duyệt xem map có bao nhiêu trong arr = x,y,x,y,...
         // ballPositions = [arr[0],arr[1],arr[arr.length / 2],arr[arr.length/2 + 1],arr[arr.length-2], arr[arr.length-1]
@@ -719,6 +724,63 @@ class Board {
             // giảm 1 đơn vị của CHANGE_NUMBER
             CHANGE_NUMBER -= 1;
             document.getElementById("chance-counter").innerHTML = CHANGE_NUMBER;
+        }
+    }
+
+    moveToOneCellReload() {
+        let startId, tempId;
+        for (let j = 1; j < ROWS - 1; j++) {
+            for (let i = 1; i < COLS - 1; i++) {
+                if (i === 1 && j === 1) {
+                    startId = positions.get(i + '-' + j);
+                } else {
+                    startId = tempId;
+                }
+
+                console.log("startId", startId)
+                if (i < COLS - 2) {
+                    if (i === 1) {
+                        tempId = positions.get(i + '-' + j);
+                        // hiệu ứng
+                        if (i % 2 === 1) {
+                            this.drawChoice(i, j)
+                        }
+                        if(i===1 && j===1){
+
+                        }else{
+                            this.drawCell(i, j, startId);
+                        }
+                        startId = tempId;
+                        tempId = positions.get((i + 1) + '-' + j);
+                        console.log("temp final: ", tempId)
+                        // hiệu ứng
+                        if (i % 2 === 1) {
+                            this.drawChoice(i + 1, j)
+                        }
+                        this.drawCell(i + 1, j, startId);
+                    } else {
+                        tempId = positions.get((i + 1) + '-' + j);
+                        console.log("temp final: ", tempId)
+                        // hiệu ứng
+                        if (i % 2 === 1) {
+                            this.drawChoice(i + 1, j)
+                        }
+                        this.drawCell(i + 1, j, startId);
+                    }
+                }
+                if (i === COLS - 2 && j === ROWS - 2) {
+                    //     vẽ lại  ô đầu 1,1
+                    this.drawCell(1, 1, startId)
+                    // if(positions.get(1+'-'+1)===null){
+                    //     this.drawEmpty(1,1, null);
+                    //     console.log("check check")
+                    // }
+                }
+                // tempId = undefined => startId không thể assign tempId
+                if(tempId === undefined){
+                    startId = undefined;
+                }
+            }
         }
     }
 }
@@ -923,15 +985,16 @@ const changeBtn = document.getElementById('change-btn');
  * Đếm ngược thời gian và xử lý của trò chơi
  */
 let number = TIME;
-let clickTimer = CLICK_SECOND_COUNTER_ADD_POKEMON;//90s tạo 1 add pokemon
-function coundown() {
+let timer = SECOND_COUNTER_ADD_POKEMON;//90s tạo 1 add pokemon
+function countdown() {
     number--;
-    clickTimer--;
-    if (LEVEL >= 5) {
-        document.getElementById("clickTimer").innerHTML = clickTimer;
-        if (clickTimer === 0) {
+    timer--;
+    if (LEVEL === 5) {
+        document.getElementById("clickTimer").innerHTML = timer;
+        ;
+        if (timer === 0) {
             board.addRandomPokemon();
-            clickTimer = CLICK_SECOND_COUNTER_ADD_POKEMON;
+            timer = SECOND_COUNTER_ADD_POKEMON;
         }
     }
     if (isGameOver === true) {
@@ -940,7 +1003,7 @@ function coundown() {
     }
     if (number > 0) {
         document.getElementById("timer").innerHTML = parseInt(number / 60) + ":" + (number % 60);
-        countdownTimeout = setTimeout("coundown()", 1000);
+        countdownTimeout = setTimeout("countdown()", 1000);
     } else {
         isGameOver = true;
         document.getElementById("timer").innerHTML = "Game Over";
@@ -968,24 +1031,20 @@ playBtn.addEventListener('click', function () {
     board = new Board(ctx);
     console.log(LEVEL)
     if (LEVEL === 2) {
-        board.drawBoardLevel2();
+        board.drawWallBoard();
     } else if (LEVEL === 3) {
-        board.drawBoardLevel2();
+        board.drawWallBoard();
     } else if (LEVEL === 4) {
-        board.drawBoardLevel4();
+        board.drawWallBallBoard();
     } else if (LEVEL === 5) {
-        board.drawBoardLevel4();
+        board.drawWallBallBoard();
     } else if (LEVEL === 6) {
-
-    } else if (LEVEL === 7) {
-
-    } else if (LEVEL === 8) {
-
+        board.drawWallBoard();
     } else {
-        board.drawBoardLevel1();
+        board.drawBasicBoard();
     }
     isGameOver = false;
-    coundown();
+    countdown();
     canvas.addEventListener("click", function (event) {
         // ô được click
         const rect = canvas.getBoundingClientRect();
@@ -1013,16 +1072,18 @@ replayBtn.addEventListener('click', function () {
     isGameOver = false;
     trueChoiceCounter = 0;
     if (LEVEL === 2) {
-        board.drawBoardLevel2()
+        board.drawWallBoard()
     } else if (LEVEL === 3) {
-        board.drawBoardLevel2()
+        board.drawWallBoard();
     } else if (LEVEL === 4) {
-        board.drawBoardLevel4();
+        board.drawWallBallBoard();
     } else if (LEVEL === 5) {
-        board.drawBoardLevel4();
-        clickTimer = CLICK_SECOND_COUNTER_ADD_POKEMON;
+        board.drawWallBallBoard();
+        timer = SECOND_COUNTER_ADD_POKEMON;
+    } else if (LEVEL === 6) {
+        board.drawWallBoard();
     } else {
-        board.drawBoardLevel1()
+        board.drawBasicBoard();
     }
 });
 

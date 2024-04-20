@@ -60,11 +60,15 @@
     </div>
     <div class="btn-group">
         <button class="btn" id="play-btn">Play</button>
-        <button class="btn" id="exit-btn" style="display:none;" title="Exit" onclick="exit()"><i class="fa-solid fa-backward"></i></button>
+        <button class="btn" id="exit-btn" style="display:none;" title="Exit" onclick="exit()"><i
+                class="fa-solid fa-backward"></i></button>
         <button class="btn" id="guide-btn" title="Guide" onclick="showGuide()"><i class="fa-solid fa-book"></i></button>
-        <button class="btn" id="infor-btn" title="Information" onclick="showInformation()"><i class="fa-solid fa-user"></i></button>
-        <button class="btn" id="link-btn" title="Video Demo" onclick="showLink()"><i class="fa-brands fa-youtube"></i></button>
-        <button class="btn" id="replay-btn" style="display:none;" title="Replay"><i class="fa-solid fa-rotate-right"></i></button>
+        <button class="btn" id="infor-btn" title="Information" onclick="showInformation()"><i
+                class="fa-solid fa-user"></i></button>
+        <button class="btn" id="link-btn" title="Video Demo" onclick="showLink()"><i class="fa-brands fa-youtube"></i>
+        </button>
+        <button class="btn" id="replay-btn" style="display:none;" title="Replay"><i
+                class="fa-solid fa-rotate-right"></i></button>
     </div>
     <div id="information-box">
         <div class="title">Thông tin cá nhân</div>
@@ -94,18 +98,58 @@
             <img src="images/g3.png" alt="" sizes="" srcset="">
             <img src="images/g4.png" alt="" sizes="" srcset="">
         </div>
-        <div class="inforItem">2.Khác biệt về cách chơi trong từng Level</div>
+        <div style=" display:flex;justify-content: space-between">
+            <img style="width: 10%; height: 10%; margin-right: 5px" src="images/g5.png" alt="" sizes="" srcset="">
+            <span class="inforItem">Mọi level đều có chức năng xáo trộn các thẻ Pokemon trong 5 lần thực hiện</span>
+        </div>
+
+        <div class="inforItem">2. Các level và sự khác biệt</div>
         <div class="more"><i class="fa-solid fa-circle"></i> Level 1 - Beginner</div>
+        <div class="more">Đây là level cơ bản nhất, bản đồ trò chơi chỉ bao gồm các thẻ Pokemon.</div>
 
         <div class="more"><i class="fa-solid fa-circle"></i> Level 2 - Intermediate</div>
+        <div class="more">
+            Ở level 2, bản đồ trò chơi không chỉ bao gồm các thẻ Pokemon mà còn giới thiệu
+            thêm 1 loại thẻ Wall ngăn cản đường nối Pokemon của bạn.
+        </div>
 
         <div class="more"><i class="fa-solid fa-circle"></i> Level 3 - Advanced</div>
+        <div class="more">
+            Ở level 3, bản đồ trò chơi bao gồm các thẻ Pokemon và Wall. Tuy nhiên, cách chơi đã có sự thay đổi
+            khi trọng lực của mặt đất đã được áp dụng. Khi 1 thẻ pokemon biến mất, lần lượt các thẻ Pokemon ở phía trên
+            sẽ rơi xuống và chỉ dừng lại khi xuống tận dưới cùng hoặc bị cản bởi bức tường không gian (thẻ Wall).
+        </div>
 
         <div class="more"><i class="fa-solid fa-circle"></i> Level 4 - Expert</div>
+        <div class="more">
+            Ở level 4, bản đồ trò chơi bao gồm các thẻ Pokemon và Wall. Ngoài việc áp dụng trọng lực của mặt đất thì
+            level 4 ngẫu nhiên
+            có thêm các thẻ Pokemon bóng ma. Khi bạn nối 2 thẻ Pokemon bóng ma lại với nhau, tỷ lệ 2 thẻ Pokemon khác
+            trên bản đồ sẽ
+            bị phong ấn thành thẻ Wall vĩnh viễn là rất cao. Nếu suy nghĩ tích cực, 2 Pokemon bóng ma đó đã giúp bạn loại bỏ 2 thẻ
+            Pokemon khác
+            trên bản đồ, ngược lại bạn có thể gặp khó khăn hơn trong việc nối các Pokemon khác sau này. Hãy khôn khéo
+            vận dụng và tận dụng
+            những may mắn nhỏ nhoi...
+        </div>
 
         <div class="more"><i class="fa-solid fa-circle"></i> Level 5 - Master</div>
-
+        <div class="more">
+            Bạn đã vượt qua sự có mặt của Pokemon bóng ma ở Level 4? Tới level này - level 5, các Pokemon bóng ma đã
+            nguyền rủa các Pokemon khác.
+            Rằng nếu các Pokemon khác biến mất mà sau 30s mà bạn không nối được 2 Pokemon nào thì nó sẽ sinh thêm 1 hoặc
+            2 cặp Pokemon khác. Điều này khiến
+            bạn sẽ càng khó khăn hơn khi số lượng Pokemon càng ít.
+        </div>
         <div class="more"><i class="fa-solid fa-circle"></i> Level 6 - Legendary</div>
+        <div class="more">
+            Ở level này - level 6, bạn sẽ không còn thấy Pokemon bóng ma nữa và bản đồ không còn áp dụng trọng lưc mặt
+            đất nữa. Tuy nhiên, dư âm của Pokemon
+            bóng ma đã làm cho bản đồ rung động, khi bạn nối 2 Pokemon thì mỗi ô trên bản đồ sẽ di chuyển tới vị trí
+            tiếp theo (từ trái sáng phải và từ cuối cùng đến đầu tiên).
+            Điều này liên tục làm thay đổi cấu trúc bản đồ và sẽ mang đến khó khăn cho bạn, song nó cũng mang đến may
+            mắn nếu bạn biết nắm bắt.
+        </div>
         <div style="text-align: center">
             <button class="btn" id="ok-btn" onclick="hideGuide()">OK</button>
         </div>

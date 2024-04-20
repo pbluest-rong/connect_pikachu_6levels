@@ -119,6 +119,10 @@ p {
   padding-left: 15px;
 }
 
+#guide-box {
+  height: 60%;
+}
+
 .inforItem {
   font-family: "Arial", serif;
   font-size: 20px;
