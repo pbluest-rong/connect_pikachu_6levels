@@ -15,30 +15,55 @@ body {
   justify-content: center;
   place-items: center;
 }
-
-.side-bar {
+.container #clickTimer {
+  color: red;
+  font-size: 50px;
+}
+.container #board {
+  margin-top: 5px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+.container .changeBox {
+  position: absolute;
+  right: 0;
+  top: 0;
+  display: flex;
+}
+.container .changeBox #change-btn {
+  display: none;
+}
+.container .changeBox #chance-counter {
+  position: absolute;
+  top: 5px;
+  right: 15px;
+  color: red;
+  display: none;
+}
+.container .changeBox .side-bar {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
 }
-
-.title {
+.container .changeBox .title {
   font-size: 18px;
   display: flex;
   justify-content: center;
   margin-bottom: 4px;
   text-align: center;
 }
-
-p {
+.container .changeBox .imageBox {
+  display: flex;
+  justify-content: space-between;
+}
+.container p {
   color: yellow;
   font-size: 40px;
   margin-top: 5px;
   margin-bottom: 5px;
 }
-
-.btn {
+.container .btn {
   background-color: greenyellow;
   font-size: 25px;
   height: 60px;
@@ -47,11 +72,10 @@ p {
   border-radius: 10px;
   margin-left: 10px;
 }
-
-.btn-group {
+.container .btn-group {
   display: flex;
 }
-.btn-group #play-btn {
+.container .btn-group #play-btn {
   background-color: greenyellow;
   font-size: 15px;
   width: 400px;
@@ -60,12 +84,11 @@ p {
   cursor: pointer;
   border-radius: 10px;
 }
-
-.level-box {
+.container .level-box {
   display: flex;
   padding: 20px 0;
 }
-.level-box .level {
+.container .level-box .level {
   width: 30px;
   height: 30px;
   margin: 0 5px;
@@ -76,7 +99,7 @@ p {
   justify-content: center;
   align-items: center;
 }
-.level-box .level label {
+.container .level-box .level label {
   cursor: pointer;
   width: 30px;
   height: 30px;
@@ -85,16 +108,13 @@ p {
   justify-content: center;
   align-items: center;
 }
-
-.level input[type=radio] {
+.container .level input[type=radio] {
   display: none;
 }
-
-.level input[type=radio]:checked + label {
+.container .level input[type=radio]:checked + label {
   background-color: greenyellow;
 }
-
-#guide-box, #information-box {
+.container #guide-box, .container #information-box {
   display: none;
   position: fixed;
   top: 50%;
@@ -107,23 +127,21 @@ p {
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Optional: Add a box shadow for a subtle effect */
 }
-#guide-box img, #information-box img {
+.container #guide-box img, .container #information-box img {
   margin-left: 10px;
   width: 20%;
   height: 20%;
 }
-#guide-box .more, #information-box .more {
+.container #guide-box .more, .container #information-box .more {
   font-family: "Arial", serif;
   font-size: 18px;
   margin: 5px 0;
   padding-left: 15px;
 }
-
-#guide-box {
+.container #guide-box {
   height: 60%;
 }
-
-.inforItem {
+.container .inforItem {
   font-family: "Arial", serif;
   font-size: 20px;
   padding: 5px 0;

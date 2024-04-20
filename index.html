@@ -7,6 +7,7 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>PIKACHU GAME</title>
+    <link rel="icon" type="image/x-icon" href="/images/logo.png">
     <link rel="stylesheet" href="style.css"/>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -21,11 +22,11 @@
 <body>
 <div class="container">
     <p id="timer"></p>
-    <div id="clickTimer" style="color: red; font-size: 50px"></div>
-    <canvas id="board" style="margin-top: 5px; margin-left: 10px; margin-right: 10px;"></canvas>
-    <div style="position: absolute; right: 0; top: 0; display: flex">
-        <button class="btn" id="change-btn" style="display: none"><i class="fa-solid fa-rotate"></i></button>
-        <div id="chance-counter" style="position: absolute; top: 5px; right: 15px; color: red; display: none"></div>
+    <div id="clickTimer"></div>
+    <canvas id="board"></canvas>
+    <div class="changeBox">
+        <button class="btn" id="change-btn"><i class="fa-solid fa-rotate"></i></button>
+        <div id="chance-counter"></div>
     </div>
     <div class="side-bar">
         <div class="title" id="title">
@@ -84,7 +85,7 @@
         </div>
     </div>
     <div id="guide-box">
-        <div class="title">Hướng dẫn chơi Connect Pokemon Game</div>
+        <div class="title">Hướng dẫn chơi Connect Pikachu Game</div>
         <div class="inforItem">1.Giới thiệu</div>
         <div class="more">
             Connect pikachu là một trò chơi thú vị trong 10 phút. Nhiệm vụ của bạn là kết nối
@@ -92,13 +93,13 @@
             Bạn chỉ có thể kết nối các hình Pokemon nếu không có hình khác cản trở trên đường giữa chúng.
             Trò chơi kết thúc khi hết thời gian hoặc khi bạn đã nối hết tất cả các cặp pokemon.
         </div>
-        <div style="display: flex; justify-content: space-between">
+        <div class="imageBox">
             <img src="images/g1.png" alt="" sizes="" srcset="">
             <img src="images/g2.png" alt="" sizes="" srcset="">
             <img src="images/g3.png" alt="" sizes="" srcset="">
             <img src="images/g4.png" alt="" sizes="" srcset="">
         </div>
-        <div style=" display:flex;justify-content: space-between">
+        <div class="imageBox">
             <img style="width: 10%; height: 10%; margin-right: 5px" src="images/g5.png" alt="" sizes="" srcset="">
             <span class="inforItem">Mọi level đều có chức năng xáo trộn các thẻ Pokemon trong 5 lần thực hiện</span>
         </div>

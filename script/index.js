@@ -1,14 +1,12 @@
 /*
 21130482_LeBaPhung_0336677141_DH21DTC
-
 source code: https://github.com/pbluest-rong/connect-pikachu-game
-Từ khóa: x là thứ dòng của ô, y là thứ cột của y
  */
 const COLS = 16 + 2;
 const ROWS = 8 + 2;
 const BLOCK_SIZE = 55;
 const TIME = 10 * 60 + 1;
-const SECOND_COUNTER_ADD_POKEMON = 30+ 1;//15s nếu ko click đúng 2 ô thì thêm 2 hoặc 4 pokemon
+const SECOND_COUNTER_ADD_POKEMON = 30 + 1;//15s nếu ko click đúng 2 ô thì thêm 2 hoặc 4 pokemon
 let CHANGE_NUMBER = 5;
 let LEVEL = 1;
 let board;
@@ -24,7 +22,7 @@ let ballId;
 let XballPostions = []//e.g. [x1,x2,x3,x4]
 // XballPostions: là mảng chứa các thứ cột của các Ball
 let YballPostions = []//e.g. [y1,y2,y3,y4]
-// Nguồn image data set: https://www.kaggle.com/datasets/hlrhegemony/pokemon-image-dataset
+// Nguồn tham khảo image data set: https://www.kaggle.com/datasets/hlrhegemony/pokemon-image-dataset
 const imgs = [
     "images/pokemon-set/1.jpg",
     "images/pokemon-set/2.jpg",
@@ -109,7 +107,8 @@ class Board {
 
     /*
      drawCell function: dựa vào id của thẻ pokemon sẽ vẽ image lên 1 ô hoặc vẽ viền cho board(giới hạn)
-     # khi function này được thực hiện, thông qua positions thì các ô sẽ được gán với id của pokemon,nếu các ô viền sẽ được gán là null
+     # khi function này được thực hiện, thông qua positions thì các ô sẽ được gán với id của pokemon.
+     Trường hợp nếu id là null thì tương ứng với ô trống, id là undefined tương ứng với thẻ Wall. Nếu các ô là viền sẽ được gán là null.
      */
     drawCell(xAxis, yAxis, pokemonId) {
         if (xAxis !== 0 && xAxis !== COLS - 1 && yAxis !== 0 && yAxis !== ROWS - 1) {
@@ -128,9 +127,7 @@ class Board {
         }
     }
 
-    /*
-    drawWall function: vẽ ô WALL trên bản đồ, đồng thời ô đó sẽ được gán undefined trong positions
-     */
+    // drawWall function: vẽ ô WALL trên bản đồ, đồng thời ô đó sẽ được gán undefined trong positions
     drawWall(xAxis, yAxis) {
         this.positions.set(xAxis + "-" + yAxis, undefined);
         let img = new Image();
@@ -146,6 +143,7 @@ class Board {
         };
     }
 
+    // drawBall function: chỉ vẽ ô Ball trên bản đồ
     drawBall(xAxis, yAxis) {
         let img = new Image();
         img.src = "images/pokemon-set/ball.jpg"; // Lấy đường dẫn từ pokemonMap
@@ -160,8 +158,8 @@ class Board {
         };
     }
 
+    // drawBallList function: lưu trữ vị trí các pokemon sẽ là Ball ở trong XballPostions và YballPostions và vẽ ra trên bản đồ.
     drawBallList() {
-        // Vẽ ball
         XballPostions = []
         YballPostions = []
         for (let row = 1; row < ROWS - 1; row++) {
@@ -268,9 +266,7 @@ class Board {
         );
     }
 
-    /*
-    drawChoice function: làm mờ ô khi ô đó được chọn
-     */
+    // drawChoice function: làm mờ ô khi ô đó được chọn
     drawChoice(xAxis, yAxis) {
         this.ctx.globalAlpha = 0.5;
         this.ctx.fillRect(
@@ -293,9 +289,7 @@ class Board {
         );
     }
 
-    /*
-    removePokemon function: thay đổi giá trị của ô trong positions là null. Điều này thể hiện ô đó có thể thông qua
-     */
+    // removePokemon function: thay đổi giá trị của ô trong positions là null. Điều này thể hiện ô đó có thể thông qua
     removePokemon(first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col) {
         positions.set(first_Pos_Row + "-" + first_Pos_Col, null)
         positions.set(last_Pos_Row + "-" + last_Pos_Col, null)
@@ -362,7 +356,7 @@ class Board {
                                         }
                                     }
                                 }
-                                if(LEVEL === 5){
+                                if (LEVEL === 5) {
                                     timer = SECOND_COUNTER_ADD_POKEMON;
                                 }
                             }
@@ -400,7 +394,7 @@ class Board {
             }
         }
     }
-
+    // fellToGround function: xử lý các ô phía trên rơi xuống khi 2 ô được nối biến mất
     handleLevel3(first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col) {
         if (LEVEL >= 3) {
             if (first_Pos_Row !== last_Pos_Row) {
@@ -424,7 +418,7 @@ class Board {
             }
         }
     }
-
+    // fellToGround function: xử lý các ô phía trên rơi xuống khi ô đó biến mất
     fellToGround(x, y, time) {
         setTimeout(() => {
             if (this.positions.get(x + '-' + y) === null) {
@@ -447,7 +441,9 @@ class Board {
             }
         }, time)
     }
-
+    /*
+    removeRandomPokemon function: nhằm xóa 2 ô ngẫu nhiên cùng 1 pokemon Id trên bản đồ
+     */
     removeRandomPokemon(first_Pos_Row, first_Pos_Col, last_Pos_Row, last_Pos_Col) {
         //    random pokemonId trong map
         let number = Math.floor(Math.random() * 6) + 1;
@@ -517,7 +513,9 @@ class Board {
             }, 600)
         }
     }
-
+    /*
+    addRandomPokemon function: tạo thêm 2 hoặc 4 pokemon ngẫu nhiên trên bản đồ
+     */
     addRandomPokemon() {
         let XNullIdPositions = []
         let YNullIdPositions = []
@@ -658,7 +656,9 @@ class Board {
             console.log("final: ", index)
         }
     }
-
+    /*
+    drawWallBallBoard function: Khởi tạo bản đồ ngẫu nhiên pokemon có thẻ Wall
+    */
     drawWallBallBoard() {
         XballPostions = []
         YballPostions = []
@@ -726,7 +726,9 @@ class Board {
             document.getElementById("chance-counter").innerHTML = CHANGE_NUMBER;
         }
     }
-
+    /*
+    moveToOneCellReload function: di chuyển tất cả các ô pokemon, wall đến vị trí tiếp theo từ trái sang phải, từ cuối lên đầu
+     */
     moveToOneCellReload() {
         let startId, tempId;
         for (let j = 1; j < ROWS - 1; j++) {
@@ -745,9 +747,9 @@ class Board {
                         if (i % 2 === 1) {
                             this.drawChoice(i, j)
                         }
-                        if(i===1 && j===1){
+                        if (i === 1 && j === 1) {
                             this.drawCell(i, j, null);
-                        }else{
+                        } else {
                             this.drawCell(i, j, startId);
                         }
                         startId = tempId;
@@ -777,7 +779,7 @@ class Board {
                     // }
                 }
                 // tempId = undefined => startId không thể assign tempId
-                if(tempId === undefined){
+                if (tempId === undefined) {
                     startId = undefined;
                 }
             }
@@ -1165,7 +1167,7 @@ function exit() {
 }
 
 function showLink() {
-    window.open("https://www.youtube.com/@pbluest_rong", "_blank");
+    window.open("https://www.youtube.com/watch?v=D4Ik1AussHk", "_blank");
 }
 
 
