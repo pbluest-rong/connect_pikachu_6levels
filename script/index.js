@@ -718,7 +718,7 @@ class Board {
                 }
                 index++;
             }
-            if (LEVEL >= 4) {
+            if (LEVEL !== 6 && LEVEL >= 4) {
                 this.drawBallList()
             }
             // giảm 1 đơn vị của CHANGE_NUMBER
@@ -746,7 +746,7 @@ class Board {
                             this.drawChoice(i, j)
                         }
                         if(i===1 && j===1){
-
+                            this.drawCell(i, j, null);
                         }else{
                             this.drawCell(i, j, startId);
                         }
